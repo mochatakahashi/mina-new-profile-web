@@ -142,24 +142,14 @@
         <div class="container">
             <h2 class="section-title">Ambassadorship</h2>
             <div class="bento-grid ambassador-grid">
-                <div class="bento-card large">
+                <div class="bento-card large ambassador-expandable" id="ambassador-card">
                     <div class="card-icon"><i class="fas fa-medal"></i></div>
-                    <h3>Tech Ambassador</h3>
-                    <p>Serving as an ambassador for various technology platforms and communities, I represent and promote innovative solutions while connecting students with industry opportunities. My role involves organizing events, facilitating workshops, and building bridges between academia and the tech industry.</p>
-                    <div class="ambassador-highlights">
-                        <div class="highlight-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Event Organization & Management</span>
-                        </div>
-                        <div class="highlight-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Community Building & Engagement</span>
-                        </div>
-                        <div class="highlight-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Knowledge Sharing & Mentorship</span>
-                        </div>
-                    </div>
+                    <h3>Ambassador Experience</h3>
+                    <p>Serving as an ambassador for various technology platforms and communities, I represent and promote innovative solutions while connecting students with industry opportunities.</p>
+                    <button class="expand-button" id="open-ambassador-modal">
+                        <span>See More</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
                 <div class="bento-card accent">
                     <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
@@ -169,6 +159,52 @@
             </div>
         </div>
     </section>
+
+    <!-- Ambassador Modal -->
+    <div class="modal" id="ambassador-modal">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="close-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <div class="modal-icon"><i class="fas fa-medal"></i></div>
+                <h2>Ambassador Experience</h2>
+            </div>
+            <div class="modal-body">
+                        <div class="experience-item">
+                            <h4><i class="fas fa-store"></i> SM Student Ambassador</h4>
+                            <p class="experience-period">2024 – Present</p>
+                            <ul>
+                                <li>Collaborates with Rico Hizon and the SM in Focus team to promote student engagement in the program</li>
+                                <li>Encourages students to explore and subscribe to SM in Focus by sharing insights and promoting campus awareness</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="experience-item">
+                            <h4><i class="fas fa-shield-alt"></i> Whoscall x Gogolook Ambassador (Digital Defender)</h4>
+                            <p class="experience-period">2024 – Present</p>
+                            <ul>
+                                <li>Promotes digital safety and awareness through educational campaigns about scam prevention and responsible online behavior</li>
+                                <li>Engages in community discussions and initiatives that empower students to stay safe online</li>
+                                <li><strong>Awarded First Place in the Whoscall x Gogolook Ambassador Program 2024</strong> for exceptional advocacy and leadership</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="experience-item">
+                            <h4><i class="fas fa-school"></i> School Ambassador</h4>
+                            <p class="experience-period">Asia Pacific College</p>
+                            <ul>
+                                <li>Represents the college at various events and activities</li>
+                                <li>Facilitates communication between students and the administration</li>
+                                <li>Promotes campus culture and student engagement initiatives</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Certificates Section -->
     <section id="certificates" class="section">

@@ -274,6 +274,41 @@ window.addEventListener('load', () => {
     }, 100);
 });
 
+// Ambassador Modal
+const openModalBtn = document.getElementById('open-ambassador-modal');
+const ambassadorModal = document.getElementById('ambassador-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const modalOverlay = document.getElementById('modal-overlay');
+
+if (openModalBtn && ambassadorModal) {
+    openModalBtn.addEventListener('click', () => {
+        ambassadorModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+}
+
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        ambassadorModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
+if (modalOverlay) {
+    modalOverlay.addEventListener('click', () => {
+        ambassadorModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && ambassadorModal && ambassadorModal.classList.contains('active')) {
+        ambassadorModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+});
+
 // Log a welcome message
 console.log('%c👋 Welcome to my portfolio!', 'color: #8b5cf6; font-size: 20px; font-weight: bold;');
 console.log('%cInterested in the code? Check out the GitHub repo!', 'color: #ec4899; font-size: 14px;');
