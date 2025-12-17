@@ -1,3 +1,34 @@
+// Theme Toggle (Dark/Light Mode)
+const themeToggle = document.getElementById('theme-toggle');
+const htmlElement = document.documentElement;
+const themeIcon = themeToggle.querySelector('i');
+
+// Check for saved theme preference or default to light mode
+const currentTheme = localStorage.getItem('theme') || 'light';
+htmlElement.setAttribute('data-theme', currentTheme);
+
+// Update icon based on current theme
+if (currentTheme === 'dark') {
+    themeIcon.classList.remove('fa-moon');
+    themeIcon.classList.add('fa-sun');
+}
+
+themeToggle.addEventListener('click', () => {
+    const theme = htmlElement.getAttribute('data-theme');
+    
+    if (theme === 'light') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+    } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+    }
+});
+
 // Hamburger Menu Toggle
 const hamburger = document.querySelector('.hamburger');
 const navMenu = document.querySelector('.nav-menu');
