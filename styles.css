@@ -686,31 +686,49 @@ body {
     padding: 0;
     overflow: hidden;
     cursor: pointer;
+    position: relative;
 }
 
 .gallery-card.tall {
     height: 520px;
 }
 
-.gallery-placeholder {
+.gallery-image {
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary-light), var(--accent-color));
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.gallery-image-full {
+    object-fit: contain;
+    background: var(--bg-secondary);
+}
+
+.gallery-card:hover .gallery-image {
+    transform: scale(1.1);
+}
+
+.gallery-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 1.5rem 1rem 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.gallery-card:hover .gallery-overlay {
+    transform: translateY(0);
+}
+
+.gallery-overlay p {
     color: white;
-    transition: all 0.3s ease;
-}
-
-.gallery-placeholder i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.gallery-card:hover .gallery-placeholder {
-    transform: scale(1.05);
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
 }
 
 .gallery-note {
