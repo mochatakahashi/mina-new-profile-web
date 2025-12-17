@@ -65,25 +65,33 @@ navLinks.forEach(link => {
 const sections = document.querySelectorAll('section');
 
 function updateActiveLink() {
-    const scrollPosition = window.scrollY + 100;
+    const scrollPosition = window.scrollY + 150;
+    let currentSection = '';
 
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
         const sectionHeight = section.clientHeight;
         const sectionId = section.getAttribute('id');
 
-        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === `#${sectionId}`) {
-                    link.classList.add('active');
-                }
-            });
+        if (scrollPosition >= sectionTop - 200 && scrollPosition < sectionTop + sectionHeight - 200) {
+            currentSection = sectionId;
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentSection}`) {
+            link.classList.add('active');
         }
     });
 }
 
+// Initialize on load
+window.addEventListener('load', updateActiveLink);
 window.addEventListener('scroll', updateActiveLink);
+
+// Update when hash changes
+window.addEventListener('hashchange', updateActiveLink);
 
 // Navbar Background on Scroll
 const navbar = document.querySelector('.navbar');
