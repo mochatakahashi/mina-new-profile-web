@@ -301,11 +301,44 @@ if (modalOverlay) {
     });
 }
 
-// Close modal with Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && ambassadorModal && ambassadorModal.classList.contains('active')) {
-        ambassadorModal.classList.remove('active');
+// Leadership Modal
+const openLeadershipModalBtn = document.getElementById('open-leadership-modal');
+const leadershipModal = document.getElementById('leadership-modal');
+const closeLeadershipModalBtn = document.getElementById('close-leadership-modal');
+const leadershipModalOverlay = document.getElementById('leadership-modal-overlay');
+
+if (openLeadershipModalBtn && leadershipModal) {
+    openLeadershipModalBtn.addEventListener('click', () => {
+        leadershipModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+}
+
+if (closeLeadershipModalBtn) {
+    closeLeadershipModalBtn.addEventListener('click', () => {
+        leadershipModal.classList.remove('active');
         document.body.style.overflow = 'auto';
+    });
+}
+
+if (leadershipModalOverlay) {
+    leadershipModalOverlay.addEventListener('click', () => {
+        leadershipModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
+// Close modals with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if (ambassadorModal && ambassadorModal.classList.contains('active')) {
+            ambassadorModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        if (leadershipModal && leadershipModal.classList.contains('active')) {
+            leadershipModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
     }
 });
 

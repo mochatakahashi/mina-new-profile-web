@@ -650,6 +650,14 @@ body {
     margin-bottom: 1rem;
 }
 
+.experience-role {
+    color: var(--primary-color);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
 .experience-item ul {
     list-style: none;
     padding-left: 0;

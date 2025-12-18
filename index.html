@@ -118,10 +118,14 @@
         <div class="container">
             <h2 class="section-title">Leadership & Activities</h2>
             <div class="bento-grid leadership-grid">
-                <div class="bento-card accent">
+                <div class="bento-card accent leadership-expandable" id="leadership-card">
                     <div class="card-icon"><i class="fas fa-users"></i></div>
                     <h3>Community Leadership</h3>
                     <p>Active in organizing tech events and workshops, mentoring fellow students, and fostering collaborative learning environments</p>
+                    <button class="expand-button" id="open-leadership-modal">
+                        <span>See More</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
                 <div class="bento-card">
                     <div class="card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
@@ -201,6 +205,98 @@
                             </ul>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leadership Modal -->
+    <div class="modal" id="leadership-modal">
+        <div class="modal-overlay" id="leadership-modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="close-leadership-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <div class="modal-icon"><i class="fas fa-users"></i></div>
+                <h2>Community Leadership Experience</h2>
+            </div>
+            <div class="modal-body">
+                <div class="experience-item">
+                    <h4><i class="fas fa-university"></i> Arellano University – ICT Club 2024</h4>
+                    <p class="experience-period">Pasay, NCR</p>
+                    <p class="experience-role">Treasurer</p>
+                    <ul>
+                        <li>Responsible for collecting and managing funds for the strand, ensuring accurate financial records</li>
+                        <li>Organized payments for jerseys and other items for the 2024 Intramurals</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item">
+                    <h4><i class="fas fa-award"></i> Arellano University – Research Project 2024</h4>
+                    <p class="experience-period">Pasay, NCR</p>
+                    <p class="experience-role">Research Leader</p>
+                    <ul>
+                        <li>Led a team to develop an educational application, motivating and guiding members to maximize their skills</li>
+                        <li>Managed project tasks, developed ideas, and delegated work among the team</li>
+                        <li><strong>Recognized as Best in Research Award</strong></li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fas fa-microsoft"></i> APC – Microsoft Community</h4>
+                    <p class="experience-period">Makati, NCR</p>
+                    <p class="experience-role">Events and Program Associate (Nov 2024 – 2025)</p>
+                    <ul>
+                        <li>Organizes and hosts events, responsible for creating the Activity Proposal Form (APF)</li>
+                        <li>Usher at Microsoft 10th Year Anniversary</li>
+                        <li>Attended Daytona – Developers Club Tour 2024</li>
+                    </ul>
+                    <p class="experience-role">Operations: Events Head (July 2025 – Present)</p>
+                    <ul>
+                        <li>Leads event planning and execution, ensuring smooth coordination among committees</li>
+                        <li>Manages activity proposals, logistics, and technical requirements for community events</li>
+                        <li>Guides members in handling event flow, documentation, and partnerships</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fas fa-shield-alt"></i> APC – Junior Information Systems Security Association</h4>
+                    <p class="experience-period">Makati, NCR</p>
+                    <p class="experience-role">Operations Associate (Nov 2024 – 2025)</p>
+                    <ul>
+                        <li>Organized and managed ushering duties and technical support for events</li>
+                        <li>Served as an online moderator during the Capture the Flag Workshop</li>
+                        <li>Assisted with event operations during the APC Capture the Flag 2024 competition</li>
+                        <li>Responsible for coordinating with event sub-documentation personnel to ensure complete and accurate coverage of event activities</li>
+                    </ul>
+                    <p class="experience-role">Relations Assistant Director (July 2025 – Present)</p>
+                    <ul>
+                        <li>Manages partnerships and communication with external organizations</li>
+                        <li>Coordinates collaborations and secures participation for events and workshops</li>
+                        <li>Drafts and manages professional emails, as well as activity forms required for events</li>
+                        <li>Supports the director in building and maintaining professional networks</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fas fa-laptop-code"></i> APC – Junior Philippine Computer Society</h4>
+                    <p class="experience-period">Makati, NCR</p>
+                    <p class="experience-role">Member (Nov 2024 – 2025)</p>
+                    <ul>
+                        <li>Actively participates in both internal and external events partnerships</li>
+                        <li>Attended CS EXPO 2024 held at FEU</li>
+                        <li>Attended Git: Branching and Collaboration Workshop</li>
+                        <li>Attended the JPCS National Geek Speaks event, a virtual gathering of schools affiliated with JPCS via Zoom</li>
+                        <li>Responsible for event documentation, including capturing photos and recording key details during activities such as Cloud Day</li>
+                        <li>Provided logistics assistance by reserving event venues and coordinating with higher management to obtain signatures on the Activity Proposal Form (APF) and Requisition Form (RF)</li>
+                    </ul>
+                    <p class="experience-role">External Relations Associate (Corporate Relations) (July 2025 – Present)</p>
+                    <ul>
+                        <li>Handles external partnerships and coordinates with corporate contacts</li>
+                        <li>Facilitates sponsorships, collaborations, and communication with industry partners</li>
+                        <li>Supports internal team by aligning external relations with organizational goals</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -299,9 +395,9 @@
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
-                    <img src="images/heads in cloud.jpg" alt="Heads in Cloud Event" class="gallery-image">
+                    <img src="images/heads in cloud.jpg" alt="Cloud Day" class="gallery-image">
                     <div class="gallery-overlay">
-                        <p>Heads in Cloud</p>
+                        <p>Cloud Day</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
