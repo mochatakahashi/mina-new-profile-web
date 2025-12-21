@@ -498,6 +498,26 @@
         </div>
     </footer>
 
+    <!-- AI Chat Assistant -->
+    <div id="ai-chat-widget">
+        <button id="ai-chat-toggle" class="ai-chat-btn" aria-label="Open AI Chat">
+            <i class="fas fa-robot"></i>
+        </button>
+        <div id="ai-chat-panel" class="ai-chat-panel hidden">
+            <div class="ai-chat-header">
+                <h3>Ask me anything!</h3>
+                <button id="ai-chat-close" class="ai-close-btn" aria-label="Close chat">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <iframe 
+                src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/21/07/20251221071445-63MDJOTS.json"
+                style="width: 100%; height: 100%; border: none;"
+                title="AI Chat Assistant"
+            ></iframe>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
