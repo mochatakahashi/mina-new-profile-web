@@ -328,6 +328,33 @@ if (leadershipModalOverlay) {
     });
 }
 
+// Industry Engagement Modal
+const openIndustryModalBtn = document.getElementById('open-industry-modal');
+const industryModal = document.getElementById('industry-modal');
+const closeIndustryModalBtn = document.getElementById('close-industry-modal');
+const industryModalOverlay = document.getElementById('industry-modal-overlay');
+
+if (openIndustryModalBtn && industryModal) {
+    openIndustryModalBtn.addEventListener('click', () => {
+        industryModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+}
+
+if (closeIndustryModalBtn) {
+    closeIndustryModalBtn.addEventListener('click', () => {
+        industryModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
+if (industryModalOverlay) {
+    industryModalOverlay.addEventListener('click', () => {
+        industryModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
 // Close modals with Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -337,6 +364,10 @@ document.addEventListener('keydown', (e) => {
         }
         if (leadershipModal && leadershipModal.classList.contains('active')) {
             leadershipModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        if (industryModal && industryModal.classList.contains('active')) {
+            industryModal.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
     }

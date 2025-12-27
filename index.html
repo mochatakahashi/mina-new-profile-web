@@ -127,19 +127,105 @@
                         <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
-                <div class="bento-card">
-                    <div class="card-icon"><i class="fas fa-chalkboard-teacher"></i></div>
-                    <h3>Tech Advocacy</h3>
-                    <p>Promoting technology education and digital literacy in the community</p>
-                </div>
-                <div class="bento-card">
-                    <div class="card-icon"><i class="fas fa-project-diagram"></i></div>
-                    <h3>Project Collaboration</h3>
-                    <p>Leading and participating in various tech projects and hackathons</p>
+                <div class="bento-card large leadership-expandable">
+                    <div class="card-icon"><i class="fas fa-rocket"></i></div>
+                    <h3>Industry Engagement</h3>
+                    <p>Expanding technical skills and exploring emerging technologies through active participation in hackathons, workshops, and community meetups.</p>
+                    <button class="expand-button" id="open-industry-modal">
+                        <span>See More</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- Industry Engagement Modal -->
+    <div class="modal" id="industry-modal">
+        <div class="modal-overlay" id="industry-modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="close-industry-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-header">
+                <div class="modal-icon"><i class="fas fa-rocket"></i></div>
+                <h2>Industry Engagement Experience</h2>
+            </div>
+            <div class="modal-body">
+                <h3 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-trophy"></i> Major Milestones (Hackathons & Competitions)</h3>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fas fa-code"></i> Cursor Meetup Philippines (EP02) | My First Hackathon</h4>
+                    <p class="experience-period">October 11, 2025</p>
+                    <p class="experience-role">Role: Participant / Builder</p>
+                    <p style="margin-top: 0.5rem;"><strong>Tech Stack:</strong> AI-augmented development (Cursor)</p>
+                    <p style="margin-top: 0.75rem; margin-bottom: 0.5rem;"><strong>Highlights:</strong></p>
+                    <ul>
+                        <li>Participated in the "Builders Showcase" and hackathon segments</li>
+                        <li>Explored AI-native development tools and models</li>
+                        <li>Built alongside the Cursor team and local developer community</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fab fa-facebook"></i> Build Club Manila x Meta: Inside the Llama Lab | Team Hackathon</h4>
+                    <p class="experience-period">November 8, 2025</p>
+                    <p class="experience-role">Role: Team Participant</p>
+                    <p style="margin-top: 0.5rem;"><strong>Scope:</strong> Fast-paced 2-hour hackathon</p>
+                    <p style="margin-top: 0.5rem;"><strong>Tech Stack:</strong> Meta Llama 3, Python, LLM APIs</p>
+                    <p style="margin-top: 0.75rem; margin-bottom: 0.5rem;"><strong>Highlights:</strong></p>
+                    <ul>
+                        <li>Hands-on workshop with Machine Learning Engineers from Thinking Machines</li>
+                        <li>Deployed AI at scale concepts</li>
+                        <li>Worked in a team environment under time pressure to ship a prototype</li>
+                    </ul>
+                </div>
+
+                <h3 style="color: var(--primary); margin: 2rem 0 1rem;"><i class="fas fa-cloud"></i> Cloud & Technical Skills (Upskilling)</h3>
+                <p style="margin-bottom: 1.5rem;">Events directly related to specialization in AWS, Azure, and Web Development.</p>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fab fa-microsoft"></i> Azure Community Night | Year-End Special</h4>
+                    <p class="experience-period">December 12, 2025</p>
+                    <ul>
+                        <li><strong>Focus:</strong> Microsoft Azure innovations and cloud networking</li>
+                        <li><strong>Explored:</strong> Latest Azure services and features</li>
+                        <li><strong>Networked:</strong> With Azure professionals and enthusiasts</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item">
+                    <h4><i class="fab fa-wordpress"></i> WordPress Manila Meetup | Future Proofing WordPress</h4>
+                    <p class="experience-period">November 29, 2025</p>
+                    <ul>
+                        <li><strong>Focus:</strong> Web Development at scale and CMS management</li>
+                        <li><strong>Learned:</strong> About modern WordPress development practices</li>
+                        <li><strong>Explored:</strong> Scalability and performance optimization techniques</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item highlight">
+                    <h4><i class="fab fa-aws"></i> Head in the Clouds, Feet on the Ground | AWS User Group PH</h4>
+                    <p class="experience-period">November 14, 2025</p>
+                    <ul>
+                        <li><strong>Focus:</strong> Cloud careers, AWS ecosystem, and mentorship from AWS Heroes</li>
+                        <li><strong>Explored:</strong> Career pathways in cloud engineering</li>
+                        <li><strong>Learned:</strong> Best practices from AWS certified professionals</li>
+                    </ul>
+                </div>
+                
+                <div class="experience-item">
+                    <h4><i class="fab fa-python"></i> PythonPH September Meetup | Data That Works</h4>
+                    <p class="experience-period">September 27, 2025</p>
+                    <ul>
+                        <li><strong>Focus:</strong> Data Science and Real-world Python applications</li>
+                        <li><strong>Gained:</strong> Insights into practical Python implementations in data-driven projects</li>
+                        <li><strong>Networked:</strong> With Python developers and data scientists in the community</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Ambassadorship Section -->
     <section id="ambassadorship" class="section bg-alt">
