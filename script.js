@@ -355,6 +355,33 @@ if (industryModalOverlay) {
     });
 }
 
+// LearnWithCapy Project Modal
+const openLearnWithCapyModalBtn = document.getElementById('open-learnwithcapy-modal');
+const learnWithCapyModal = document.getElementById('learnwithcapy-modal');
+const closeLearnWithCapyModalBtn = document.getElementById('close-learnwithcapy-modal');
+const learnWithCapyModalOverlay = document.getElementById('learnwithcapy-modal-overlay');
+
+if (openLearnWithCapyModalBtn && learnWithCapyModal) {
+    openLearnWithCapyModalBtn.addEventListener('click', () => {
+        learnWithCapyModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+}
+
+if (closeLearnWithCapyModalBtn) {
+    closeLearnWithCapyModalBtn.addEventListener('click', () => {
+        learnWithCapyModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
+if (learnWithCapyModalOverlay) {
+    learnWithCapyModalOverlay.addEventListener('click', () => {
+        learnWithCapyModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+}
+
 // Close modals with Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -368,6 +395,10 @@ document.addEventListener('keydown', (e) => {
         }
         if (industryModal && industryModal.classList.contains('active')) {
             industryModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        if (learnWithCapyModal && learnWithCapyModal.classList.contains('active')) {
+            learnWithCapyModal.classList.remove('active');
             document.body.style.overflow = 'auto';
         }
     }
