@@ -424,3 +424,26 @@ if (aiChatClose && aiChatPanel) {
         aiChatPanel.classList.add('hidden');
     });
 }
+
+// Modal Scroll to Top Button (for LearnWithCapy modal)
+const modalScrollToTopBtn = document.getElementById('modal-scroll-to-top');
+const learnWithCapyModalContent = document.querySelector('#learnwithcapy-modal .modal-content');
+
+// Show/hide button based on modal content scroll position
+if (learnWithCapyModalContent && modalScrollToTopBtn) {
+    learnWithCapyModalContent.addEventListener('scroll', () => {
+        if (learnWithCapyModalContent.scrollTop > 300) {
+            modalScrollToTopBtn.classList.add('visible');
+        } else {
+            modalScrollToTopBtn.classList.remove('visible');
+        }
+    });
+
+    // Scroll to top of modal content when button is clicked
+    modalScrollToTopBtn.addEventListener('click', () => {
+        learnWithCapyModalContent.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
