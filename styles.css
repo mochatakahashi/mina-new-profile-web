@@ -983,6 +983,11 @@ body {
     font-style: italic;
 }
 
+.gallery-intro {
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
 .cert-description {
     color: var(--text-secondary);
 }
