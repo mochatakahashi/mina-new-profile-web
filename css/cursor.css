@@ -1,0 +1,193 @@
+/* ==========================================================================
+   cursor.css: "Glow orb + ring" cursor, sparkle canvas, tap ripples (spec §7)
+   Owns the #fx-cursor, #fx-sparkle and #fx-taps subtrees. Keyframe prefix: cursor-
+   Positions are written by js/cursor.js as inline transforms; this file only
+   sets looks, sizes per state and transitions.
+   ========================================================================== */
+
+/* ---- Native cursor: hidden only while the orb is live (chat panel and iframes keep theirs) ---- */
+html.fx-cursor-on, html.fx-cursor-on *:not(iframe) { cursor: none !important; }
+html.fx-cursor-on #ai-chat-panel, html.fx-cursor-on #ai-chat-panel * { cursor: auto !important; }
+html.fx-cursor-on #ai-chat-panel :is(button, a, [role="button"]),
+html.fx-cursor-on #ai-chat-panel :is(button, a, [role="button"]) * { cursor: pointer !important; }
+
+/* ---- Layers ---- */
+#fx-sparkle, #fx-cursor, #fx-taps {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+#fx-sparkle {
+  z-index: var(--z-sparkle, 11990);
+  width: 100%;                                    /* exact px size written by cursor.js */
+  height: 100%;
+}
+#fx-cursor, #fx-taps {
+  z-index: var(--z-cursor, 12000);
+  width: 0;
+  height: 0;
+}
+
+/* ---- Orb container: fades in on the first mouse move, out in keyboard mode ---- */
+#fx-cursor {
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out, cubic-bezier(.22, 1, .36, 1));
+}
+html.fx-cursor-on #fx-cursor { opacity: 1; }
+html.fx-kbd #fx-cursor { opacity: 0; }
+
+/* ---- Ring ---- */
+.fx-cursor-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--cursor-ring, rgba(233, 213, 255, .60));
+  border-radius: 50%;
+  background-color: transparent;
+  box-shadow: 0 0 18px -6px var(--cursor-glow, rgba(240, 171, 252, .80));
+  will-change: transform;
+  transition:
+    width 220ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)),
+    height 220ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)),
+    border-radius 220ms,
+    background-color 220ms,
+    border-color 220ms,
+    opacity 200ms;
+}
+
+/* Glyph (view state only): Font Awesome "expand" */
+.fx-cursor-glyph {
+  font: 900 14px/1 'Font Awesome 6 Free';
+  color: #fff;
+  opacity: 0;
+  transition: opacity 200ms;
+}
+.fx-cursor-glyph::before { content: "\f065"; }
+
+/* ---- Dot: follows the pointer exactly (transform written synchronously) ---- */
+.fx-cursor-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cursor-core, #ffffff) 0%, #f5d0fe 55%, #f0abfc 100%);
+  box-shadow: 0 0 12px 2px var(--cursor-glow, rgba(240, 171, 252, .80)), 0 0 28px 6px rgba(168, 85, 247, .35);
+  will-change: transform;
+  transition: width 200ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)), height 200ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)), opacity 200ms;
+}
+[data-theme="light"] .fx-cursor-dot { background: var(--cursor-core, #7c3aed); }
+
+/* ---- States (#fx-cursor[data-state]) ---- */
+#fx-cursor[data-state="hidden"] .fx-cursor-ring,
+#fx-cursor[data-state="hidden"] .fx-cursor-dot { opacity: 0; }
+
+/* magnet: ring size and radius are set inline from the target's rect */
+#fx-cursor[data-state="magnet"] .fx-cursor-ring { background-color: var(--cursor-fill, rgba(167, 139, 250, .14)); }
+#fx-cursor[data-state="magnet"] .fx-cursor-dot { width: 4px; height: 4px; }
+
+#fx-cursor[data-state="view"] .fx-cursor-ring {
+  width: 64px;
+  height: 64px;
+  background-color: rgba(11, 8, 32, .35);
+}
+#fx-cursor[data-state="view"] .fx-cursor-glyph { opacity: 1; }
+#fx-cursor[data-state="view"] .fx-cursor-dot { opacity: 0; }
+
+#fx-cursor[data-state="link"] .fx-cursor-ring {
+  width: 46px;
+  height: 46px;
+  background-color: var(--cursor-fill, rgba(167, 139, 250, .14));
+}
+#fx-cursor[data-state="link"] .fx-cursor-dot { width: 5px; height: 5px; }
+
+#fx-cursor[data-state="card"] .fx-cursor-ring {
+  width: 60px;
+  height: 60px;
+  border-color: rgba(233, 213, 255, .25);
+  border-color: color-mix(in srgb, var(--cursor-ring, rgba(233, 213, 255, .60)) 42%, transparent);   /* ≈ .25 alpha */
+}
+
+#fx-cursor[data-state="text"] .fx-cursor-ring {
+  width: 20px;
+  height: 20px;
+  opacity: .35;
+}
+#fx-cursor[data-state="text"] .fx-cursor-dot { width: 6px; height: 6px; }
+
+/* Pressed: scales are animated by cursor.js; the ring edge warms up */
+#fx-cursor.is-pressed .fx-cursor-ring { border-color: var(--cursor-glow, rgba(240, 171, 252, .80)); }
+
+/* ---- Touch tap ripple (pool of 4, each with 6 dots) ---- */
+.fx-tap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+.fx-tap::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: -28px;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--tap-ring, rgba(240, 171, 252, .90));
+  border-radius: 50%;
+  opacity: 0;
+}
+.fx-tap i {
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tap-ring, rgba(240, 171, 252, .90));
+  opacity: 0;
+}
+.fx-tap i:nth-child(1) { --a: 0deg; }
+.fx-tap i:nth-child(2) { --a: 60deg; }
+.fx-tap i:nth-child(3) { --a: 120deg; }
+.fx-tap i:nth-child(4) { --a: 180deg; }
+.fx-tap i:nth-child(5) { --a: 240deg; }
+.fx-tap i:nth-child(6) { --a: 300deg; }
+
+/* Motion version: ring 0 → 56px over 520ms, dots fly out 18px over 450ms */
+html.fx-motion .fx-tap.is-on::before { animation: cursor-tap-ring 520ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) both; }
+html.fx-motion .fx-tap.is-on i { animation: cursor-tap-dot 450ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) both; }
+
+@keyframes cursor-tap-ring {
+  from { opacity: 1; transform: scale(0); }
+  to   { opacity: 0; transform: scale(1); }
+}
+@keyframes cursor-tap-dot {
+  from { opacity: 1; transform: rotate(var(--a, 0deg)) translateX(4px); }
+  to   { opacity: 0; transform: rotate(var(--a, 0deg)) translateX(18px); }
+}
+
+/* Reduced motion: one static 36px soft circle; its .35 → 0 fade is a WAAPI opacity animation */
+.fx-tap.is-static::before {
+  left: -18px;
+  top: -18px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: radial-gradient(circle, var(--tap-ring, rgba(240, 171, 252, .90)) 0%, transparent 70%);
+  opacity: 1;
+}
+.fx-tap.is-static i { display: none; }
+
+/* ---- Print ---- */
+@media print {
+  #fx-sparkle, #fx-cursor, #fx-taps { display: none; }
+}
