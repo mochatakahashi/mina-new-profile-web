@@ -393,3 +393,115 @@ if (aiChatClose && aiChatPanel) {
         aiChatPanel.classList.add('hidden');
     });
 }
+
+// Side Quests Photo Viewer
+const photoViewer = document.getElementById('photo-viewer');
+
+if (photoViewer) {
+    const viewerImg = document.getElementById('photo-viewer-img');
+    const viewerCaption = document.getElementById('photo-viewer-caption');
+    const viewerClose = document.getElementById('photo-viewer-close');
+    const viewerPrev = document.getElementById('photo-viewer-prev');
+    const viewerNext = document.getElementById('photo-viewer-next');
+    const viewerOverlay = document.getElementById('photo-viewer-overlay');
+
+    let viewerPhotos = [];
+    let viewerIndex = 0;
+    let viewerTitle = '';
+    let viewerOpener = null;
+
+    const parsePhotos = (button) =>
+        (button.dataset.photos || '').split('|').map(src => src.trim()).filter(Boolean);
+
+    const showViewerPhoto = (index) => {
+        const total = viewerPhotos.length;
+        viewerIndex = (index + total) % total;
+        viewerImg.src = viewerPhotos[viewerIndex];
+        viewerImg.alt = `${viewerTitle} – photo ${viewerIndex + 1} of ${total}`;
+        viewerCaption.textContent = total > 1
+            ? `${viewerTitle} · ${viewerIndex + 1} / ${total}`
+            : viewerTitle;
+
+        // Preload neighbours so arrows feel instant
+        if (total > 1) {
+            new Image().src = viewerPhotos[(viewerIndex + 1) % total];
+            new Image().src = viewerPhotos[(viewerIndex - 1 + total) % total];
+        }
+    };
+
+    const openPhotoViewer = (button) => {
+        viewerPhotos = parsePhotos(button);
+        if (!viewerPhotos.length) return;
+        const card = button.closest('.bento-card');
+        viewerTitle = card ? card.querySelector('h3').textContent.trim() : '';
+        viewerOpener = button;
+        photoViewer.classList.toggle('single', viewerPhotos.length === 1);
+        showViewerPhoto(0);
+        photoViewer.classList.add('active');
+        photoViewer.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        viewerClose.focus();
+    };
+
+    const closePhotoViewer = () => {
+        photoViewer.classList.remove('active');
+        photoViewer.setAttribute('aria-hidden', 'true');
+        viewerImg.removeAttribute('src');
+        document.body.style.overflow = 'auto';
+        if (viewerOpener) viewerOpener.focus();
+    };
+
+    // Cover photos: add a "+N photos" badge and open the viewer on click
+    document.querySelectorAll('.side-quest-photo-btn').forEach(button => {
+        const count = parsePhotos(button).length;
+        if (count > 1) {
+            const badge = document.createElement('span');
+            badge.className = 'photo-count';
+            badge.innerHTML = `<i class="fas fa-images"></i> ${count}`;
+            button.appendChild(badge);
+        }
+        button.addEventListener('click', () => openPhotoViewer(button));
+    });
+
+    viewerPrev.addEventListener('click', () => showViewerPhoto(viewerIndex - 1));
+    viewerNext.addEventListener('click', () => showViewerPhoto(viewerIndex + 1));
+    viewerClose.addEventListener('click', closePhotoViewer);
+    viewerOverlay.addEventListener('click', closePhotoViewer);
+
+    // Keyboard: Esc closes, arrows navigate, Tab stays inside the viewer
+    document.addEventListener('keydown', (e) => {
+        if (!photoViewer.classList.contains('active')) return;
+        const multiple = viewerPhotos.length > 1;
+
+        if (e.key === 'Escape') {
+            closePhotoViewer();
+        } else if (e.key === 'ArrowLeft' && multiple) {
+            showViewerPhoto(viewerIndex - 1);
+        } else if (e.key === 'ArrowRight' && multiple) {
+            showViewerPhoto(viewerIndex + 1);
+        } else if (e.key === 'Tab') {
+            const focusable = [viewerClose, viewerPrev, viewerNext].filter(b => b.offsetParent !== null);
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
+    // Swipe left/right on phones
+    let touchStartX = null;
+    photoViewer.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    photoViewer.addEventListener('touchend', (e) => {
+        if (touchStartX === null || viewerPhotos.length < 2) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        touchStartX = null;
+        if (Math.abs(dx) > 50) showViewerPhoto(viewerIndex + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+}

@@ -476,7 +476,9 @@
                     </a>
                 </div>
                 <div class="bento-card">
-                    <img src="images/south-summit-2026.webp" alt="Group photo of attendees at AWS Student Community Day South Summit 2026 in Biñan" class="side-quest-photo" loading="lazy">
+                    <button type="button" class="side-quest-photo-btn" data-photos="images/south-summit-2026.webp" aria-label="View photos from AWS Student Community Day South Summit 2026">
+                        <img src="images/south-summit-2026.webp" alt="Group photo of attendees at AWS Student Community Day South Summit 2026 in Biñan" class="side-quest-photo" loading="lazy">
+                    </button>
                     <div class="card-icon"><i class="fas fa-camera-retro"></i></div>
                     <h3>AWS Student Community Day South Summit 2026</h3>
                     <p class="side-quest-role">Core Team Photographer</p>
@@ -486,7 +488,9 @@
                     </a>
                 </div>
                 <div class="bento-card">
-                    <img src="images/devday-exchange-manila.webp" alt="Group photo of attendees at DevDay Exchange Community: Manila" class="side-quest-photo" loading="lazy">
+                    <button type="button" class="side-quest-photo-btn" data-photos="images/devday-exchange-manila.webp" aria-label="View photos from DevDay Exchange Community: Manila">
+                        <img src="images/devday-exchange-manila.webp" alt="Group photo of attendees at DevDay Exchange Community: Manila" class="side-quest-photo" loading="lazy">
+                    </button>
                     <div class="card-icon"><i class="fas fa-laptop-code"></i></div>
                     <h3>DevDay Exchange Community: Manila</h3>
                     <p class="side-quest-role">Event Volunteer / Usher</p>
@@ -740,6 +744,24 @@
                 title="AI Chat Assistant"
             ></iframe>
         </div>
+    </div>
+
+    <!-- Photo Viewer (Side Quests) -->
+    <div class="photo-viewer" id="photo-viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" aria-hidden="true">
+        <div class="photo-viewer-overlay" id="photo-viewer-overlay"></div>
+        <button type="button" class="photo-viewer-close" id="photo-viewer-close" aria-label="Close photo viewer">
+            <i class="fas fa-times"></i>
+        </button>
+        <button type="button" class="photo-viewer-nav prev" id="photo-viewer-prev" aria-label="Previous photo">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <figure class="photo-viewer-stage">
+            <img id="photo-viewer-img" alt="">
+            <figcaption id="photo-viewer-caption"></figcaption>
+        </figure>
+        <button type="button" class="photo-viewer-nav next" id="photo-viewer-next" aria-label="Next photo">
+            <i class="fas fa-chevron-right"></i>
+        </button>
     </div>
 
     <script src="script.js"></script>
