@@ -988,6 +988,52 @@ body {
     margin-bottom: 2rem;
 }
 
+/* Gallery year tabs */
+.gallery-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.gallery-tab {
+    padding: 0.6rem 1.4rem;
+    border: 2px solid var(--primary-color);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--primary-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.gallery-tab:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.gallery-tab.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: transparent;
+    color: white;
+}
+
+.gallery-tab:focus-visible,
+.gallery-card:focus-visible {
+    outline: 3px solid var(--primary-light);
+    outline-offset: 3px;
+}
+
+.gallery-card {
+    cursor: zoom-in;
+}
+
+.gallery-card:focus-visible .gallery-overlay {
+    transform: translateY(0);
+}
+
 .cert-description {
     color: var(--text-secondary);
 }

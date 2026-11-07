@@ -174,16 +174,6 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Gallery Image Modal (for future image implementation)
-const galleryCards = document.querySelectorAll('.gallery-card');
-
-galleryCards.forEach(card => {
-    card.addEventListener('click', () => {
-        // Add your image modal logic here
-        console.log('Gallery card clicked - implement modal here');
-    });
-});
-
 // Add cursor effect (optional aesthetic enhancement)
 const createCursorFollower = () => {
     const cursor = document.createElement('div');
@@ -394,7 +384,7 @@ if (aiChatClose && aiChatPanel) {
     });
 }
 
-// Side Quests Photo Viewer
+// Photo Viewer (Side Quests cards + Gallery)
 const photoViewer = document.getElementById('photo-viewer');
 
 if (photoViewer) {
@@ -405,38 +395,33 @@ if (photoViewer) {
     const viewerNext = document.getElementById('photo-viewer-next');
     const viewerOverlay = document.getElementById('photo-viewer-overlay');
 
-    let viewerPhotos = [];
+    let viewerPhotos = []; // [{ src, caption, alt }]
     let viewerIndex = 0;
-    let viewerTitle = '';
     let viewerOpener = null;
-
-    const parsePhotos = (button) =>
-        (button.dataset.photos || '').split('|').map(src => src.trim()).filter(Boolean);
 
     const showViewerPhoto = (index) => {
         const total = viewerPhotos.length;
         viewerIndex = (index + total) % total;
-        viewerImg.src = viewerPhotos[viewerIndex];
-        viewerImg.alt = `${viewerTitle} – photo ${viewerIndex + 1} of ${total}`;
+        const photo = viewerPhotos[viewerIndex];
+        viewerImg.src = photo.src;
+        viewerImg.alt = photo.alt || photo.caption;
         viewerCaption.textContent = total > 1
-            ? `${viewerTitle} · ${viewerIndex + 1} / ${total}`
-            : viewerTitle;
+            ? `${photo.caption} · ${viewerIndex + 1} / ${total}`
+            : photo.caption;
 
         // Preload neighbours so arrows feel instant
         if (total > 1) {
-            new Image().src = viewerPhotos[(viewerIndex + 1) % total];
-            new Image().src = viewerPhotos[(viewerIndex - 1 + total) % total];
+            new Image().src = viewerPhotos[(viewerIndex + 1) % total].src;
+            new Image().src = viewerPhotos[(viewerIndex - 1 + total) % total].src;
         }
     };
 
-    const openPhotoViewer = (button) => {
-        viewerPhotos = parsePhotos(button);
-        if (!viewerPhotos.length) return;
-        const card = button.closest('.bento-card');
-        viewerTitle = card ? card.querySelector('h3').textContent.trim() : '';
-        viewerOpener = button;
-        photoViewer.classList.toggle('single', viewerPhotos.length === 1);
-        showViewerPhoto(0);
+    const openPhotoViewer = (photos, startIndex, opener) => {
+        if (!photos.length) return;
+        viewerPhotos = photos;
+        viewerOpener = opener;
+        photoViewer.classList.toggle('single', photos.length === 1);
+        showViewerPhoto(startIndex);
         photoViewer.classList.add('active');
         photoViewer.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
@@ -451,16 +436,45 @@ if (photoViewer) {
         if (viewerOpener) viewerOpener.focus();
     };
 
-    // Cover photos: add a "+N photos" badge and open the viewer on click
+    // Side Quest cards: photos listed in data-photos, separated by "|"
     document.querySelectorAll('.side-quest-photo-btn').forEach(button => {
-        const count = parsePhotos(button).length;
-        if (count > 1) {
+        const card = button.closest('.bento-card');
+        const title = card ? card.querySelector('h3').textContent.trim() : '';
+        const coverAlt = button.querySelector('img')?.alt || title;
+        const photos = (button.dataset.photos || '')
+            .split('|').map(src => src.trim()).filter(Boolean)
+            .map((src, i) => ({ src, caption: title, alt: i === 0 ? coverAlt : `${title} – photo ${i + 1}` }));
+
+        if (photos.length > 1) {
             const badge = document.createElement('span');
             badge.className = 'photo-count';
-            badge.innerHTML = `<i class="fas fa-images"></i> ${count}`;
+            badge.innerHTML = `<i class="fas fa-images"></i> ${photos.length}`;
             button.appendChild(badge);
         }
-        button.addEventListener('click', () => openPhotoViewer(button));
+        button.addEventListener('click', () => openPhotoViewer(photos, 0, button));
+    });
+
+    // Gallery: each year's photos open together, starting at the clicked one
+    document.querySelectorAll('#gallery .gallery-grid').forEach(grid => {
+        const cards = [...grid.querySelectorAll('.gallery-card')];
+        const photos = cards.map(card => {
+            const img = card.querySelector('img');
+            const caption = card.querySelector('.gallery-overlay p')?.textContent.trim() || img.alt;
+            return { src: img.getAttribute('src'), caption, alt: img.alt };
+        });
+
+        cards.forEach((card, i) => {
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `View photo: ${photos[i].caption}`);
+            card.addEventListener('click', () => openPhotoViewer(photos, i, card));
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openPhotoViewer(photos, i, card);
+                }
+            });
+        });
     });
 
     viewerPrev.addEventListener('click', () => showViewerPhoto(viewerIndex - 1));
@@ -505,3 +519,27 @@ if (photoViewer) {
         if (Math.abs(dx) > 50) showViewerPhoto(viewerIndex + (dx < 0 ? 1 : -1));
     }, { passive: true });
 }
+
+// Gallery Year Tabs
+const galleryTabs = [...document.querySelectorAll('.gallery-tab')];
+
+const selectGalleryTab = (tab) => {
+    galleryTabs.forEach(t => {
+        const selected = t === tab;
+        t.classList.toggle('active', selected);
+        t.setAttribute('aria-selected', String(selected));
+        t.tabIndex = selected ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !selected;
+    });
+};
+
+galleryTabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectGalleryTab(tab));
+    tab.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        const step = e.key === 'ArrowRight' ? 1 : -1;
+        const next = galleryTabs[(i + step + galleryTabs.length) % galleryTabs.length];
+        selectGalleryTab(next);
+        next.focus();
+    });
+});
