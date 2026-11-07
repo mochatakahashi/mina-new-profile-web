@@ -983,9 +983,14 @@ body {
     font-style: italic;
 }
 
-/* Keep the left side of a wide photo in view when the thumbnail crops it */
-.photo-focus-left {
-    object-position: left center;
+/* Wide photos that should never lose their left/right sides in thumbnails */
+.side-quest-photo.photo-full {
+    aspect-ratio: auto;
+}
+
+.gallery-image.photo-full {
+    object-fit: contain;
+    background: #0f1630;
 }
 
 .gallery-intro {
