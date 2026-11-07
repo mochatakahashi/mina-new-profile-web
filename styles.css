@@ -333,6 +333,46 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
+.side-quests-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.articles-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Side Quests & Articles (basic content styles; design pass to come) */
+.side-quests-grid > .bento-card,
+.articles-grid > .bento-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.bento-card .side-quest-role {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.bento-card .side-quest-meta {
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.card-link:hover {
+    text-decoration: underline;
+}
+
 /* Bento Cards */
 .bento-card {
     background: var(--card-bg);
@@ -912,6 +952,13 @@ body {
     }
 }
 
+/* Tighter nav spacing so all menu links fit on one line */
+@media (max-width: 1200px) {
+    .nav-menu {
+        gap: 1rem;
+    }
+}
+
 /* Tablets and Small Laptops (768px - 1023px) */
 @media (max-width: 1024px) {
     .bento-card.large,
@@ -922,10 +969,6 @@ body {
     
     .container {
         padding: 0 1.5rem;
-    }
-    
-    .nav-menu {
-        gap: 1.5rem;
     }
     
     .hero h1 {
