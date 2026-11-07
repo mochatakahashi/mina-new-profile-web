@@ -358,6 +358,15 @@ body {
     font-style: italic;
 }
 
+.side-quest-photo {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.25rem;
+}
+
 .card-link {
     display: inline-flex;
     align-items: center;
