@@ -1,0 +1,152 @@
+/* ==========================================================================
+   hero3d.css — "Architect's Nebula" hero stage (owner: HERO)
+   Owns: the .hero-stage subtree (#hero-canvas, .hero-fallback), the
+   hero3d-ready crossfade, intro choreography, the scroll-cue bob, the
+   --hero-p cloud-dive transform on .hero-content, and #fx-debug-fps.
+   Gating: every animation lives under html.fx-motion. Keyframe prefix: hero-
+   ========================================================================== */
+
+/* ---------- Stage ---------- */
+.hero-stage {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-hero-stage, 0);
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+}
+
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out, cubic-bezier(.22, 1, .36, 1));
+}
+html.hero3d-ready #hero-canvas { opacity: 1; }
+
+/* ---------- CSS fallback sky (no WebGL, CDN blocked, context lost, ?fx=off) ---------- */
+.hero-fallback {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(45% 40% at 50% 52%, rgba(168, 85, 247, .35), transparent 70%);
+  transition: opacity 900ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)), visibility 0s;
+}
+[data-theme="light"] .hero-fallback {
+  background: radial-gradient(45% 40% at 50% 52%, rgba(245, 208, 254, .6), transparent 70%);
+}
+/* Hidden (not removed) once WebGL paints, so a lost context can fade it back */
+html.hero3d-ready .hero-fallback {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 900ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)), visibility 0s linear 900ms;
+}
+
+/* Each cloud: two soft upper lobes + a wide base, pre-softened (no filter) */
+.hero-fallback-cloud {
+  --hero-fb-hi: rgba(237, 228, 255, .18);
+  --hero-fb-lo: rgba(196, 181, 253, .12);
+  position: absolute;
+  display: block;
+  aspect-ratio: 2.4;
+  background:
+    radial-gradient(34% 58% at 36% 54%, var(--hero-fb-hi) 0%, var(--hero-fb-hi) 30%, transparent 72%),
+    radial-gradient(30% 66% at 61% 42%, var(--hero-fb-hi) 0%, var(--hero-fb-hi) 28%, transparent 72%),
+    radial-gradient(52% 34% at 50% 72%, var(--hero-fb-lo) 0%, transparent 78%);
+}
+[data-theme="light"] .hero-fallback-cloud {
+  --hero-fb-hi: rgba(255, 255, 255, .85);
+  --hero-fb-lo: rgba(254, 215, 170, .4);   /* peach underside */
+}
+
+/* c1 bottom-left · c2 bottom-right · c3 bottom-centre front · c4 top-left back · c5 mid-right back */
+.hero-fallback-cloud.c1 { width: 46vw; left: -9vw; bottom: 5%; --hero-dx: 3vw; --hero-dur: 34s; --hero-delay: -9s; }
+.hero-fallback-cloud.c2 { width: 52vw; right: -12vw; bottom: 1%; --hero-dx: -3vw; --hero-dur: 40s; --hero-delay: -21s; }
+.hero-fallback-cloud.c3 { width: min(60vw, 95vh); left: 0; right: 0; margin-inline: auto; bottom: -16%; --hero-dx: 2vw; --hero-dur: 44s; --hero-delay: -30s; }
+.hero-fallback-cloud.c4 { width: 34vw; left: -4vw; top: 9%; opacity: .7; --hero-dx: 3vw; --hero-dur: 28s; --hero-delay: -4s; }
+.hero-fallback-cloud.c5 { width: 28vw; right: -7vw; top: 34%; opacity: .6; --hero-dx: -3vw; --hero-dur: 38s; --hero-delay: -15s; }
+
+/* Phones: text spans the width, so clouds frame the top and bottom edges */
+@media (max-width: 768px) {
+  .hero-fallback-cloud.c1 { width: 90vw; left: -38vw; bottom: 8%; }
+  .hero-fallback-cloud.c2 { width: 96vw; right: -42vw; bottom: 3%; }
+  .hero-fallback-cloud.c3 { width: 120vw; left: -10vw; right: auto; margin-inline: 0; bottom: -8%; }
+  .hero-fallback-cloud.c4 { width: 70vw; left: -30vw; top: 7%; }
+  .hero-fallback-cloud.c5 { width: 60vw; right: -28vw; top: 15%; }
+}
+
+@keyframes hero-drift {
+  from { transform: translate3d(calc(var(--hero-dx, 3vw) * -1), 0, 0); }
+  to   { transform: translate3d(var(--hero-dx, 3vw), 0, 0); }
+}
+html.fx-motion .hero-fallback-cloud {
+  animation: hero-drift var(--hero-dur, 36s) ease-in-out var(--hero-delay, 0s) infinite alternate;
+}
+html.hero3d-ready .hero-fallback-cloud { animation-play-state: paused; }
+
+/* ---------- Cloud dive: transform + opacity only, never filter ---------- */
+html.fx-motion .hero-content {
+  transform: translate3d(0, calc(var(--hero-p, 0) * 18vh), 0) scale(calc(1 - var(--hero-p, 0) * .05));
+  opacity: calc(1 - var(--hero-p, 0) * 1.4);
+}
+/* Keyboard focus inside the faded content restores it; faded CTAs stop taking clicks */
+html.fx-motion .hero-content:focus-within { opacity: 1; transform: none; }
+html.fx-motion #home.hero-dived .hero-content:not(:focus-within) .hero-buttons { pointer-events: none; }
+
+/* ---------- Intro choreography (first view per session only) ----------
+   Every intro animation fills backwards, so removing html.fx-intro at 3 s never pops. */
+@keyframes hero-rise  { from { opacity: 0; transform: translateY(16px); } }
+@keyframes hero-fade  { from { opacity: 0; } }
+@keyframes hero-sheen { from { background-position: 150% 0, 0 0; } to { background-position: -50% 0, 0 0; } }
+
+html.fx-intro.fx-motion .hero .hero-chip {
+  animation: hero-rise 600ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) 60ms backwards;
+}
+html.fx-intro.fx-motion .hero h1 {
+  animation:
+    hero-rise 700ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) 120ms backwards,
+    hero-sheen 1400ms var(--ease-in-out, cubic-bezier(.65, 0, .35, 1)) 500ms backwards;
+  /* The sheen layer rests off-box, so the resting look equals the non-intro look */
+  background-image:
+    linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, .55) 50%, transparent 60%),
+    var(--grad-brand-text, linear-gradient(100deg, #ffffff 0%, #e9d5ff 40%, #f9a8d4 75%, #fbcfe8 100%));
+  background-size: 250% 100%, 100% 100%;
+  background-repeat: no-repeat;
+}
+html.fx-intro.fx-motion .hero .subtitle {
+  animation: hero-rise 700ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) 280ms backwards;
+}
+html.fx-intro.fx-motion .hero .hero-buttons {
+  animation: hero-rise 700ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) 420ms backwards;
+}
+html.fx-intro.fx-motion .hero .scroll-indicator {
+  animation: hero-fade 600ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) 900ms backwards;
+}
+
+/* ---------- Scroll cue bob ---------- */
+@keyframes hero-cue {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+html.fx-motion .scroll-indicator i {
+  animation: hero-cue 1.8s var(--ease-in-out, cubic-bezier(.65, 0, .35, 1)) infinite;
+}
+
+/* ---------- Debug overlay (?fx=debug) ---------- */
+#fx-debug-fps {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: var(--z-cursor, 12000);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font: 500 11px/1.4 var(--font-mono, ui-monospace, 'SFMono-Regular', Consolas, monospace);
+  color: #e9d5ff;
+  background: rgba(11, 8, 32, .8);
+  border: 1px solid rgba(196, 181, 253, .25);
+  pointer-events: none;
+  white-space: pre;
+}

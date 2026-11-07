@@ -2,18 +2,197 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Rodmina Jhoy Ibe | Portfolio</title>
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#0b0820">
     <link rel="icon" type="image/jpeg" href="images/my-photo.jpg">
-    <link rel="stylesheet" href="styles.css">
+
+    <!-- Import map MUST come before the boot script (boot may add a modulepreload) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+    </script>
+
+    <!-- FX boot (sync, inline): flags, tier and theme before first paint; shared scroll/pointer state -->
+    <script>
+(function () {
+  var d = document, de = d.documentElement, w = window, nav = navigator, cl = de.classList;
+  var q; try { q = new URLSearchParams(location.search); } catch (e) { q = { get: function () { return null; }, has: function () { return false; } }; }
+  var mq = function (s) { return !!(w.matchMedia && w.matchMedia(s).matches); };
+  var sget = function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+  var sset = function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} };
+
+  /* Flags: ?fx=a,b (off|lite|full|no3d|nocursor|nomascot|noreveal|novt|touch|debug); aliases ?vt=0 ?webgl=0 ?fxdebug */
+  var flags = {};
+  (q.get('fx') || '').split(',').forEach(function (s) { s = s.trim(); if (s) flags[s] = true; });
+  if (q.get('vt') === '0') flags.novt = true;
+  if (q.get('webgl') === '0') flags.no3d = true;
+  if (q.has('fxdebug')) flags.debug = true;
+
+  /* Theme: ?theme preview (not saved) > saved choice > dark for first-time visitors */
+  var saved = null; try { saved = localStorage.getItem('theme'); } catch (e) {}
+  var qt = q.get('theme');
+  var theme = (qt === 'light' || qt === 'dark') ? qt : (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  de.setAttribute('data-theme', theme);
+  var meta = d.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', theme === 'light' ? '#fbf7ff' : '#0b0820');
+
+  var motionParam = q.get('motion');                                   /* 'reduce' | 'full' | null */
+  var enabled = !flags.off;
+  var reduced = motionParam === 'reduce' || (motionParam !== 'full' && mq('(prefers-reduced-motion: reduce)'));
+  var fine = !flags.touch && mq('(hover: hover) and (pointer: fine)');
+  var conn = nav.connection || {}, cores = nav.hardwareConcurrency || 8, mem = nav.deviceMemory || 8;
+  var tier = !enabled ? 'off'
+    : flags.full ? 'high'
+    : (flags.lite || conn.saveData || cores <= 2 || mem <= 2 || (!fine && w.innerWidth < 768)) ? 'low'
+    : (!fine || cores <= 4 || mem <= 4 || w.innerWidth < 1024) ? 'mid'
+    : 'high';
+  var gl = null;
+
+  var FX = w.FX = {
+    v: 2, flags: flags, enabled: enabled, reducedMotion: reduced, motion: enabled && !reduced,
+    finePointer: fine, isTouch: !fine, tier: tier, lowPower: tier === 'low' || tier === 'off',
+    dprCap: { high: 1.75, mid: 1.5, low: 1.25, off: 1 }[tier], debug: !!flags.debug,
+    params: { fx: q.get('fx'), motion: motionParam, theme: qt },
+    bp: { xs: 360, sm: 480, md: 640, tablet: 768, lg: 1024, nav: 1100, xl: 1200, xxl: 1440 },
+    state: { section: 'home', theme: theme, overlay: null, overlayId: null, chatOpen: false, introDone: false },
+    pointer: { x: w.innerWidth / 2, y: w.innerHeight / 2, nx: 0, ny: 0, type: 'mouse', moved: false, t: 0, tapX: -1, tapY: -1 },
+    scroll: { y: w.scrollY || 0, p: 0, vy: 0, dir: 1, scrolling: false, max: 1 },
+    ready: {},
+    hasWebGL: function () {
+      if (gl === null) {
+        try { var c = d.createElement('canvas'); var ctx = c.getContext('webgl2') || c.getContext('webgl'); gl = !!ctx;
+              var ext = ctx && ctx.getExtension('WEBGL_lose_context'); if (ext) ext.loseContext(); }
+        catch (e) { gl = false; }
+      }
+      return gl;
+    },
+    allow3D: function () { return enabled && !flags.no3d && !conn.saveData && !(nav.deviceMemory && nav.deviceMemory <= 2) && FX.hasWebGL(); },
+    on: function (name, fn) {                                          /* fn(detail, event); returns an unsubscribe fn */
+      var h = function (e) { fn(e.detail || {}, e); };
+      d.addEventListener('fx:' + name, h);
+      return function () { d.removeEventListener('fx:' + name, h); };
+    },
+    emit: function (name, detail) {                                    /* name WITHOUT the 'fx:' prefix */
+      detail = detail || {}; var s = FX.state;
+      if (name === 'section') s.section = detail.id;
+      else if (name === 'theme') s.theme = detail.theme;
+      else if (name === 'chat') s.chatOpen = !!detail.open;
+      else if (name === 'intro' && detail.phase === 'done') s.introDone = true;
+      else if (name === 'overlay') {
+        if (detail.open) { s.overlay = detail.kind; s.overlayId = detail.id || null; }
+        else if (s.overlay === detail.kind) { s.overlay = null; s.overlayId = null; }
+        cl.toggle('fx-overlay-open', !!s.overlay);
+      }
+      if (FX.debug) console.log('[fx]', name, detail);
+      d.dispatchEvent(new CustomEvent('fx:' + name, { detail: detail }));
+    },
+    _scrollSubs: [], _pointerSubs: [],
+    onScroll: function (fn) { FX._scrollSubs.push(fn); try { fn(FX.scroll); } catch (e) {} },
+    onPointer: function (fn) { FX._pointerSubs.push(fn); },
+    markReady: function (m, extra) { FX.ready[m] = true; var dt = { module: m }; if (extra) for (var k in extra) dt[k] = extra[k]; FX.emit('ready', dt); },
+    openChat: function (source) { FX._chatOpener = source || null; var b = d.getElementById('ai-chat-toggle'); if (b && !FX.state.chatOpen) b.click(); },  /* replaced by script.js */
+    closeChat: function () { var b = d.getElementById('ai-chat-close'); if (b && FX.state.chatOpen) b.click(); },                                         /* replaced by script.js */
+    log: function () { if (FX.debug) console.log.apply(console, ['[fx]'].concat([].slice.call(arguments))); }
+  };
+
+  cl.add('fx-js', 'fx-tier-' + tier, fine ? 'fx-fine' : 'fx-touch');
+  if (!enabled) cl.add('fx-off');
+  if (reduced) cl.add('fx-reduced'); else if (enabled) cl.add('fx-motion');
+  if (enabled && !reduced && !flags.noreveal) cl.add('fx-reveal');
+  if (enabled && !reduced && !location.hash && !sget('fx-intro-seen')) { cl.add('fx-intro'); sset('fx-intro-seen', '1'); }
+  if (FX.debug) cl.add('fx-debug');
+
+  /* Warm three.js only when 3D may be used (no WebGL probe here, to keep boot cheap) */
+  if (enabled && !flags.no3d && !conn.saveData && !(nav.deviceMemory && nav.deviceMemory <= 2)) {
+    var l = d.createElement('link'); l.rel = 'modulepreload'; l.crossOrigin = 'anonymous';
+    l.href = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js'; d.head.appendChild(l);
+  }
+
+  /* Shared pointer state: the ONLY window pointermove listener on the site */
+  w.addEventListener('pointermove', function (e) {
+    var P = FX.pointer; P.x = e.clientX; P.y = e.clientY; P.type = e.pointerType || 'mouse'; P.moved = true; P.t = e.timeStamp;
+    P.nx = (e.clientX / w.innerWidth) * 2 - 1; P.ny = (e.clientY / w.innerHeight) * 2 - 1;
+    for (var i = 0; i < FX._pointerSubs.length; i++) { try { FX._pointerSubs[i](P, e); } catch (err) { if (FX.debug) console.error(err); } }
+  }, { passive: true });
+  w.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'mouse') { FX.pointer.tapX = e.clientX; FX.pointer.tapY = e.clientY; FX.pointer.t = e.timeStamp; }
+  }, { passive: true, capture: true });
+
+  /* Shared scroll state: the ONLY window scroll listener on the site (rAF-throttled) */
+  var S = FX.scroll, lastY = S.y, ticking = false, idleT = 0;
+  function measure() { S.max = Math.max(1, de.scrollHeight - w.innerHeight); }
+  function frame() {
+    ticking = false; var y = w.scrollY || 0;
+    S.vy = y - lastY; if (S.vy) S.dir = S.vy > 0 ? 1 : -1; lastY = y;
+    S.y = y; S.p = Math.min(1, Math.max(0, y / S.max)); S.scrolling = true;
+    for (var i = 0; i < FX._scrollSubs.length; i++) { try { FX._scrollSubs[i](S); } catch (err) { if (FX.debug) console.error(err); } }
+    clearTimeout(idleT); idleT = setTimeout(function () { S.vy = 0; S.scrolling = false; }, 120);
+  }
+  w.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
+
+  /* Layout notifications (debounced 150ms) */
+  var lT = 0, lReason = 'resize';
+  function layout(reason) { lReason = reason; clearTimeout(lT); lT = setTimeout(function () { measure(); FX.emit('layout', { reason: lReason }); }, 150); }
+  w.addEventListener('resize', function () { layout('resize'); });
+  d.addEventListener('fx:layout', measure);
+  d.addEventListener('visibilitychange', function () { FX.emit('visibility', { visible: !d.hidden }); });
+  d.addEventListener('DOMContentLoaded', function () {
+    measure();
+    if (w.ResizeObserver) new ResizeObserver(function () { layout('body'); }).observe(d.body);
+    if (d.fonts && d.fonts.ready) d.fonts.ready.then(function () { layout('fonts'); });
+    setTimeout(function () { if (!FX.ready.scroll) { cl.remove('fx-reveal'); FX.log('reveal safety net fired'); } }, 3000);
+  });
+  w.addEventListener('load', function () { layout('load'); });
+
+  /* Live OS reduced-motion changes (only when not forced by ?motion=) */
+  if (!motionParam && w.matchMedia) {
+    var m = w.matchMedia('(prefers-reduced-motion: reduce)');
+    var h = function (e) {
+      FX.reducedMotion = e.matches; FX.motion = enabled && !e.matches;
+      cl.toggle('fx-reduced', e.matches); cl.toggle('fx-motion', FX.motion);
+      if (e.matches) cl.remove('fx-reveal', 'fx-intro');
+      FX.emit('motion', { reducedMotion: e.matches });
+    };
+    if (m.addEventListener) m.addEventListener('change', h); else if (m.addListener) m.addListener(h);
+  }
+})();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/scroll-fx.css">
+    <link rel="stylesheet" href="css/hero3d.css">
+    <link rel="stylesheet" href="css/mascot.css">
+    <link rel="stylesheet" href="css/cursor.css">
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Global sky: base, mood layers, stars, ambient clouds, grain (decorative) -->
+    <div id="fx-bg" data-mood="violet" aria-hidden="true">
+        <div class="fx-bg-mood" data-mood="violet"></div>
+        <div class="fx-bg-mood" data-mood="magenta"></div>
+        <div class="fx-bg-mood" data-mood="aurora"></div>
+        <div class="fx-bg-mood" data-mood="ember"></div>
+        <div class="fx-bg-stars"></div>
+        <div class="fx-bg-clouds"><span></span><span></span><span></span></div>
+        <div class="fx-bg-grain"></div>
+    </div>
+
     <!-- Fixed Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">RJI</div>
-            <ul class="nav-menu">
+            <ul class="nav-menu" id="nav-menu">
                 <li><a href="#home" class="nav-link active">Home</a></li>
                 <li><a href="#about" class="nav-link">About</a></li>
                 <li><a href="#tech" class="nav-link">Tech Stack</a></li>
@@ -25,20 +204,34 @@
                 <li><a href="#gallery" class="nav-link">Gallery</a></li>
                 <li><a href="#contact" class="nav-link">Contact</a></li>
             </ul>
-            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+            <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
                 <i class="fas fa-moon"></i>
             </button>
-            <div class="hamburger">
+            <button type="button" class="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </div>
+        <div class="fx-progress" aria-hidden="true"></div>
     </nav>
 
+    <main id="main" tabindex="-1">
+
     <!-- Hero Section -->
-    <section id="home" class="hero">
+    <section id="home" class="hero" data-fx-mood="violet">
+        <div class="hero-stage" aria-hidden="true">
+            <div class="hero-fallback">
+                <span class="hero-fallback-cloud c1"></span>
+                <span class="hero-fallback-cloud c2"></span>
+                <span class="hero-fallback-cloud c3"></span>
+                <span class="hero-fallback-cloud c4"></span>
+                <span class="hero-fallback-cloud c5"></span>
+            </div>
+            <canvas id="hero-canvas"></canvas>
+        </div>
         <div class="hero-content">
+            <p class="hero-chip"><span class="hero-chip-dot" aria-hidden="true"></span>Lead &amp; President · AWS Student Builder Group – APC</p>
             <h1 class="glitch" data-text="Rodmina Jhoy Ibe">Rodmina Jhoy Ibe</h1>
             <p class="subtitle">IT Student | Aspiring Solutions Architect | Ambassador</p>
             <div class="hero-buttons">
@@ -53,8 +246,9 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="section">
+    <section id="about" class="section" data-fx-mood="violet">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">01</span>Who I am</p>
             <h2 class="section-title">About Me</h2>
             <div class="bento-grid about-grid">
                 <div class="bento-card large">
@@ -79,8 +273,9 @@
     </section>
 
     <!-- Tech Stack Section -->
-    <section id="tech" class="section bg-alt">
+    <section id="tech" class="section bg-alt" data-fx-mood="violet">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">02</span>Tools I use</p>
             <h2 class="section-title">Tech Stack</h2>
             <div class="bento-grid tech-grid">
                 <div class="bento-card">
@@ -115,15 +310,16 @@
     </section>
 
     <!-- Leadership & Activities Section -->
-    <section id="leadership" class="section">
+    <section id="leadership" class="section" data-fx-mood="magenta">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">03</span>Community</p>
             <h2 class="section-title">Leadership & Activities</h2>
             <div class="bento-grid leadership-grid">
                 <div class="bento-card accent leadership-expandable" id="leadership-card">
                     <div class="card-icon"><i class="fas fa-users"></i></div>
                     <h3>Community Leadership</h3>
                     <p>Active in organizing tech events and workshops, mentoring fellow students, and fostering collaborative learning environments</p>
-                    <button class="expand-button" id="open-leadership-modal">
+                    <button type="button" class="expand-button" id="open-leadership-modal" aria-haspopup="dialog">
                         <span>See More</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -132,7 +328,7 @@
                     <div class="card-icon"><i class="fas fa-rocket"></i></div>
                     <h3>Industry Engagement</h3>
                     <p>Expanding technical skills and exploring emerging technologies through active participation in hackathons, workshops, and community meetups.</p>
-                    <button class="expand-button" id="open-industry-modal">
+                    <button type="button" class="expand-button" id="open-industry-modal" aria-haspopup="dialog">
                         <span>See More</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -142,15 +338,15 @@
     </section>
 
     <!-- Industry Engagement Modal -->
-    <div class="modal" id="industry-modal">
+    <div class="modal" id="industry-modal" role="dialog" aria-modal="true" aria-labelledby="industry-modal-title" aria-hidden="true">
         <div class="modal-overlay" id="industry-modal-overlay"></div>
         <div class="modal-content">
-            <button class="modal-close" id="close-industry-modal">
+            <button type="button" class="modal-close" id="close-industry-modal" aria-label="Close">
                 <i class="fas fa-times"></i>
             </button>
             <div class="modal-header">
                 <div class="modal-icon"><i class="fas fa-rocket"></i></div>
-                <h2>Industry Engagement Experience</h2>
+                <h2 id="industry-modal-title">Industry Engagement Experience</h2>
             </div>
             <div class="modal-body">
                 <h3 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-trophy"></i> Major Milestones (Hackathons & Competitions)</h3>
@@ -229,15 +425,16 @@
     </div>
 
     <!-- Ambassadorship Section -->
-    <section id="ambassadorship" class="section bg-alt">
+    <section id="ambassadorship" class="section bg-alt" data-fx-mood="magenta">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">04</span>Representing</p>
             <h2 class="section-title">Ambassadorship</h2>
             <div class="bento-grid ambassador-grid">
                 <div class="bento-card large ambassador-expandable" id="ambassador-card">
                     <div class="card-icon"><i class="fas fa-medal"></i></div>
                     <h3>Ambassador Experience</h3>
                     <p>Serving as an ambassador for various technology platforms and communities, I represent and promote innovative solutions while connecting students with industry opportunities.</p>
-                    <button class="expand-button" id="open-ambassador-modal">
+                    <button type="button" class="expand-button" id="open-ambassador-modal" aria-haspopup="dialog">
                         <span>See More</span>
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -252,61 +449,59 @@
     </section>
 
     <!-- Ambassador Modal -->
-    <div class="modal" id="ambassador-modal">
+    <div class="modal" id="ambassador-modal" role="dialog" aria-modal="true" aria-labelledby="ambassador-modal-title" aria-hidden="true">
         <div class="modal-overlay" id="modal-overlay"></div>
         <div class="modal-content">
-            <button class="modal-close" id="close-modal">
+            <button type="button" class="modal-close" id="close-modal" aria-label="Close">
                 <i class="fas fa-times"></i>
             </button>
             <div class="modal-header">
                 <div class="modal-icon"><i class="fas fa-medal"></i></div>
-                <h2>Ambassador Experience</h2>
+                <h2 id="ambassador-modal-title">Ambassador Experience</h2>
             </div>
             <div class="modal-body">
-                        <div class="experience-item">
-                            <h4><i class="fas fa-shield-alt"></i> Whoscall x Gogolook Ambassador (Digital Defender)</h4>
-                            <p class="experience-period">2024 – Present</p>
-                            <ul>
-                                <li>Promotes digital safety and awareness through educational campaigns about scam prevention and responsible online behavior</li>
-                                <li>Engages in community discussions and initiatives that empower students to stay safe online</li>
-                                <li><strong>Awarded First Place in the Whoscall x Gogolook Ambassador Program 2024</strong> for exceptional advocacy and leadership</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="experience-item">
-                            <h4><i class="fas fa-store"></i> SM Student Ambassador</h4>
-                            <p class="experience-period">2025 – Present</p>
-                            <ul>
-                                <li>Collaborates with Rico Hizon and the SM in Focus team to promote student engagement in the program</li>
-                                <li>Encourages students to explore and subscribe to SM in Focus by sharing insights and promoting campus awareness</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="experience-item">
-                            <h4><i class="fas fa-school"></i> School Ambassador</h4>
-                            <p class="experience-period">Asia Pacific College</p>
-                            <ul>
-                                <li>Represents the college at various events and activities</li>
-                                <li>Facilitates communication between students and the administration</li>
-                                <li>Promotes campus culture and student engagement initiatives</li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="experience-item">
+                    <h4><i class="fas fa-shield-alt"></i> Whoscall x Gogolook Ambassador (Digital Defender)</h4>
+                    <p class="experience-period">2024 – Present</p>
+                    <ul>
+                        <li>Promotes digital safety and awareness through educational campaigns about scam prevention and responsible online behavior</li>
+                        <li>Engages in community discussions and initiatives that empower students to stay safe online</li>
+                        <li><strong>Awarded First Place in the Whoscall x Gogolook Ambassador Program 2024</strong> for exceptional advocacy and leadership</li>
+                    </ul>
+                </div>
+
+                <div class="experience-item">
+                    <h4><i class="fas fa-store"></i> SM Student Ambassador</h4>
+                    <p class="experience-period">2025 – Present</p>
+                    <ul>
+                        <li>Collaborates with Rico Hizon and the SM in Focus team to promote student engagement in the program</li>
+                        <li>Encourages students to explore and subscribe to SM in Focus by sharing insights and promoting campus awareness</li>
+                    </ul>
+                </div>
+
+                <div class="experience-item">
+                    <h4><i class="fas fa-school"></i> School Ambassador</h4>
+                    <p class="experience-period">Asia Pacific College</p>
+                    <ul>
+                        <li>Represents the college at various events and activities</li>
+                        <li>Facilitates communication between students and the administration</li>
+                        <li>Promotes campus culture and student engagement initiatives</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Leadership Modal -->
-    <div class="modal" id="leadership-modal">
+    <div class="modal" id="leadership-modal" role="dialog" aria-modal="true" aria-labelledby="leadership-modal-title" aria-hidden="true">
         <div class="modal-overlay" id="leadership-modal-overlay"></div>
         <div class="modal-content">
-            <button class="modal-close" id="close-leadership-modal">
+            <button type="button" class="modal-close" id="close-leadership-modal" aria-label="Close">
                 <i class="fas fa-times"></i>
             </button>
             <div class="modal-header">
                 <div class="modal-icon"><i class="fas fa-users"></i></div>
-                <h2>Community Leadership Experience</h2>
+                <h2 id="leadership-modal-title">Community Leadership Experience</h2>
             </div>
             <div class="modal-body">
                 <div class="experience-item highlight">
@@ -367,7 +562,7 @@
                 </div>
                 
                 <div class="experience-item highlight">
-                    <h4><i class="fas fa-microsoft"></i> APC – Microsoft Community</h4>
+                    <h4><i class="fab fa-microsoft"></i> APC – Microsoft Community</h4>
                     <p class="experience-period">Makati, NCR</p>
                     <p class="experience-role">Events and Program Associate (Nov 2024 – 2025)</p>
                     <ul>
@@ -426,8 +621,9 @@
     </div>
 
     <!-- Side Quests & Gigs Section -->
-    <section id="side-quests" class="section">
+    <section id="side-quests" class="section" data-fx-mood="aurora">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">05</span>2026 gigs</p>
             <h2 class="section-title">Side Quests & Gigs</h2>
             <div class="bento-grid side-quests-grid">
                 <div class="bento-card">
@@ -444,7 +640,7 @@
                 </div>
                 <div class="bento-card">
                     <button type="button" class="side-quest-photo-btn" data-photos="images/2026/buildhers-code-with-color.webp | images/2026/buildhers-ambassadhers-call.webp" aria-label="View photos from AWS BuildHERs+">
-                        <img src="images/2026/buildhers-code-with-color.webp" alt="Group photo at AWS User Group BuildHERs+ Philippines' Code with Color event" class="side-quest-photo photo-full" loading="lazy">
+                        <img src="images/2026/buildhers-code-with-color.webp" alt="Group photo at AWS User Group BuildHERs+ Philippines' Code with Color event" class="side-quest-photo photo-full" width="1024" height="768" style="height: auto; aspect-ratio: auto 1024 / 768;" loading="lazy" decoding="async">
                     </button>
                     <div class="card-icon"><i class="fas fa-bullhorn"></i></div>
                     <h3>AWS BuildHERs+</h3>
@@ -453,7 +649,7 @@
                 </div>
                 <div class="bento-card">
                     <button type="button" class="side-quest-photo-btn" data-photos="images/2026/openai-admu-2026.webp" aria-label="View photos from OpenAI @ ADMU">
-                        <img src="images/2026/openai-admu-2026.webp" alt="Group selfie in front of the OpenAI screen at OpenAI @ ADMU" class="side-quest-photo" loading="lazy">
+                        <img src="images/2026/openai-admu-2026.webp" alt="Group selfie in front of the OpenAI screen at OpenAI @ ADMU" class="side-quest-photo" loading="lazy" decoding="async">
                     </button>
                     <div class="card-icon"><i class="fas fa-brain"></i></div>
                     <h3>OpenAI @ ADMU</h3>
@@ -462,7 +658,7 @@
                 </div>
                 <div class="bento-card">
                     <button type="button" class="side-quest-photo-btn" data-photos="images/2026/mega-manila-2026-team.webp | images/2026/mega-manila-2026-attendees.webp" aria-label="View photos from AWS Student Community Day Mega Manila 2026">
-                        <img src="images/2026/mega-manila-2026-team.webp" alt="Organizers and volunteers of AWS Student Community Day Mega Manila 2026 on stage at Asia Pacific College" class="side-quest-photo photo-full" loading="lazy">
+                        <img src="images/2026/mega-manila-2026-team.webp" alt="Organizers and volunteers of AWS Student Community Day Mega Manila 2026 on stage at Asia Pacific College" class="side-quest-photo photo-full" width="1814" height="755" style="height: auto; aspect-ratio: auto 1814 / 755;" loading="lazy" decoding="async">
                     </button>
                     <div class="card-icon"><i class="fab fa-aws"></i></div>
                     <h3>AWS Student Community Day Mega Manila 2026</h3>
@@ -477,7 +673,7 @@
                 </div>
                 <div class="bento-card">
                     <button type="button" class="side-quest-photo-btn" data-photos="images/2026/appbuildersph-hackathon-2026.webp" aria-label="View photos from AppBuildersPH">
-                        <img src="images/2026/appbuildersph-hackathon-2026.webp" alt="Group photo of participants and organizers at the AppBuildersPH Hackathon 2026" class="side-quest-photo" loading="lazy">
+                        <img src="images/2026/appbuildersph-hackathon-2026.webp" alt="Group photo of participants and organizers at the AppBuildersPH Hackathon 2026" class="side-quest-photo" loading="lazy" decoding="async">
                     </button>
                     <div class="card-icon"><i class="fas fa-camera"></i></div>
                     <h3>AppBuildersPH</h3>
@@ -489,7 +685,7 @@
                 </div>
                 <div class="bento-card">
                     <button type="button" class="side-quest-photo-btn" data-photos="images/2026/south-summit-2026.webp" aria-label="View photos from AWS Student Community Day South Summit 2026">
-                        <img src="images/2026/south-summit-2026.webp" alt="Group photo of attendees at AWS Student Community Day South Summit 2026 in Biñan" class="side-quest-photo" loading="lazy">
+                        <img src="images/2026/south-summit-2026.webp" alt="Group photo of attendees at AWS Student Community Day South Summit 2026 in Biñan" class="side-quest-photo" loading="lazy" decoding="async">
                     </button>
                     <div class="card-icon"><i class="fas fa-camera-retro"></i></div>
                     <h3>AWS Student Community Day South Summit 2026</h3>
@@ -501,7 +697,7 @@
                 </div>
                 <div class="bento-card">
                     <button type="button" class="side-quest-photo-btn" data-photos="images/2026/devday-exchange-manila.webp" aria-label="View photos from DevDay Exchange Community: Manila">
-                        <img src="images/2026/devday-exchange-manila.webp" alt="Group photo of attendees at DevDay Exchange Community: Manila" class="side-quest-photo" loading="lazy">
+                        <img src="images/2026/devday-exchange-manila.webp" alt="Group photo of attendees at DevDay Exchange Community: Manila" class="side-quest-photo" loading="lazy" decoding="async">
                     </button>
                     <div class="card-icon"><i class="fas fa-laptop-code"></i></div>
                     <h3>DevDay Exchange Community: Manila</h3>
@@ -516,8 +712,9 @@
     </section>
 
     <!-- Articles Section -->
-    <section id="articles" class="section bg-alt">
+    <section id="articles" class="section bg-alt" data-fx-mood="aurora">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">06</span>Writing</p>
             <h2 class="section-title">Articles</h2>
             <div class="bento-grid articles-grid">
                 <div class="bento-card">
@@ -543,8 +740,9 @@
     </section>
 
     <!-- Certificates Section -->
-    <section id="certificates" class="section">
+    <section id="certificates" class="section" data-fx-mood="aurora">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">07</span>Credentials</p>
             <h2 class="section-title">Certificates & Achievements</h2>
             <div class="bento-grid certificates-grid">
                 <div class="bento-card large-horizontal">
@@ -563,8 +761,9 @@
     </section>
 
     <!-- Hobbies Section -->
-    <section id="hobbies" class="section bg-alt">
+    <section id="hobbies" class="section bg-alt" data-fx-mood="ember">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">08</span>Interests</p>
             <h2 class="section-title">Hobbies & Interests</h2>
             <div class="bento-grid hobbies-grid">
                 <div class="bento-card large">
@@ -624,8 +823,9 @@
     </section>
 
     <!-- Gallery Section -->
-    <section id="gallery" class="section">
+    <section id="gallery" class="section" data-fx-mood="ember">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">09</span>Snapshots</p>
             <h2 class="section-title">Gallery</h2>
             <div class="gallery-tabs" role="tablist" aria-label="Gallery by year">
                 <button type="button" class="gallery-tab active" role="tab" id="tab-year-1" aria-selected="true" aria-controls="gallery-year-1">Year 1 · Campus</button>
@@ -637,55 +837,55 @@
             <p class="gallery-note gallery-intro">My first year at Asia Pacific College: events, workshops, and competitions with my campus orgs (APC Microsoft Community, JISSA, and JPCS) and ambassador programs.</p>
             <div class="bento-grid gallery-grid">
                 <div class="bento-card gallery-card tall">
-                    <img src="images/year-1/speak with rico hizon.jpg" alt="Speaking with Rico Hizon" class="gallery-image">
+                    <img src="images/year-1/speak with rico hizon.webp" alt="Speaking with Rico Hizon" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>Speaking with Rico Hizon</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
-                    <img src="images/year-1/heads in cloud.jpg" alt="Cloud Day" class="gallery-image">
+                    <img src="images/year-1/heads in cloud.webp" alt="Cloud Day" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>Cloud Day</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
-                    <img src="images/year-1/jissa ctf.jpg" alt="JISSA CTF Competition" class="gallery-image">
+                    <img src="images/year-1/jissa ctf.webp" alt="JISSA CTF Competition" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>JISSA CTF</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card wide">
-                    <img src="images/year-1/ctrl alt run.jpg" alt="Ctrl Alt Run Event" class="gallery-image">
+                    <img src="images/year-1/ctrl alt run.webp" alt="Ctrl Alt Run Event" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>Ctrl Alt Run</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
-                    <img src="images/year-1/jissa is in dlsu.jpg" alt="JISSA at DLSU" class="gallery-image">
+                    <img src="images/year-1/jissa is in dlsu.webp" alt="JISSA at DLSU" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>JISSA at DLSU</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card tall">
-                    <img src="images/year-1/jpcs in lpu.jpg" alt="JPCS at LPU" class="gallery-image">
+                    <img src="images/year-1/jpcs in lpu.webp" alt="JPCS at LPU" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>JPCS at LPU</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
-                    <img src="images/year-1/msc office.jpg" alt="Microsoft Office Visit" class="gallery-image">
+                    <img src="images/year-1/msc office.webp" alt="Microsoft Office Visit" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>Microsoft Office</p>
                     </div>
                 </div>
                 <div class="bento-card gallery-card">
-                    <img src="images/year-1/msc workshop.jpg" alt="Microsoft Workshop" class="gallery-image">
+                    <img src="images/year-1/msc workshop.webp" alt="Microsoft Workshop" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>Microsoft Workshop</p>
                     </div>
                 </div>
-                <div class="bento-card gallery-card wide">
-                    <img src="images/year-1/pic with socit 23'24'.jpg" alt="SOCIT 2023-2024" class="gallery-image">
+                <div class="bento-card gallery-card">
+                    <img src="images/year-1/pic with socit 23'24'.webp" alt="SOCIT 2023-2024" class="gallery-image" loading="lazy" decoding="async">
                     <div class="gallery-overlay">
                         <p>SOCIT 23-24</p>
                     </div>
@@ -698,49 +898,49 @@
                 <p class="gallery-note gallery-intro">My 2026 beyond campus: community days, hackathons, and tech events where I volunteered, organized, and took photos.</p>
                 <div class="bento-grid gallery-grid">
                     <div class="bento-card gallery-card wide">
-                        <img src="images/2026/mega-manila-2026-team.webp" alt="Organizers and volunteers of AWS Student Community Day Mega Manila 2026 on stage at Asia Pacific College" class="gallery-image photo-full" loading="lazy">
+                        <img src="images/2026/mega-manila-2026-team.webp" alt="Organizers and volunteers of AWS Student Community Day Mega Manila 2026 on stage at Asia Pacific College" class="gallery-image photo-full" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>Mega Manila: Organizers &amp; Volunteers</p>
                         </div>
                     </div>
                     <div class="bento-card gallery-card wide">
-                        <img src="images/2026/mega-manila-2026-attendees.webp" alt="Attendees making heart signs at the close of AWS Student Community Day Mega Manila 2026" class="gallery-image" loading="lazy">
+                        <img src="images/2026/mega-manila-2026-attendees.webp" alt="Attendees making heart signs at the close of AWS Student Community Day Mega Manila 2026" class="gallery-image" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>Mega Manila: Attendees</p>
                         </div>
                     </div>
                     <div class="bento-card gallery-card wide">
-                        <img src="images/2026/south-summit-2026.webp" alt="Group photo of attendees at AWS Student Community Day South Summit 2026 in Biñan" class="gallery-image" loading="lazy">
+                        <img src="images/2026/south-summit-2026.webp" alt="Group photo of attendees at AWS Student Community Day South Summit 2026 in Biñan" class="gallery-image" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>AWS Student Community Day South Summit</p>
                         </div>
                     </div>
                     <div class="bento-card gallery-card">
-                        <img src="images/2026/devday-exchange-manila.webp" alt="Group photo of attendees at DevDay Exchange Community: Manila" class="gallery-image" loading="lazy">
+                        <img src="images/2026/devday-exchange-manila.webp" alt="Group photo of attendees at DevDay Exchange Community: Manila" class="gallery-image" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>DevDay Exchange: Manila</p>
                         </div>
                     </div>
                     <div class="bento-card gallery-card wide">
-                        <img src="images/2026/appbuildersph-hackathon-2026.webp" alt="Group photo of participants and organizers at the AppBuildersPH Hackathon 2026" class="gallery-image" loading="lazy">
+                        <img src="images/2026/appbuildersph-hackathon-2026.webp" alt="Group photo of participants and organizers at the AppBuildersPH Hackathon 2026" class="gallery-image" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>AppBuildersPH Hackathon</p>
                         </div>
                     </div>
                     <div class="bento-card gallery-card">
-                        <img src="images/2026/openai-admu-2026.webp" alt="Group selfie in front of the OpenAI screen at OpenAI @ ADMU" class="gallery-image" loading="lazy">
+                        <img src="images/2026/openai-admu-2026.webp" alt="Group selfie in front of the OpenAI screen at OpenAI @ ADMU" class="gallery-image" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>OpenAI @ ADMU</p>
                         </div>
                     </div>
-                    <div class="bento-card gallery-card wide">
-                        <img src="images/2026/buildhers-code-with-color.webp" alt="Group photo at AWS User Group BuildHERs+ Philippines' Code with Color event" class="gallery-image photo-full" loading="lazy">
+                    <div class="bento-card gallery-card">
+                        <img src="images/2026/buildhers-code-with-color.webp" alt="Group photo at AWS User Group BuildHERs+ Philippines' Code with Color event" class="gallery-image photo-full" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>AWS BuildHERs+: Code with Color</p>
                         </div>
                     </div>
-                    <div class="bento-card gallery-card wide">
-                        <img src="images/2026/buildhers-ambassadhers-call.webp" alt="Video call with AWS BuildHERs+ AmbassadHERS+ members" class="gallery-image photo-full" loading="lazy">
+                    <div class="bento-card gallery-card">
+                        <img src="images/2026/buildhers-ambassadhers-call.webp" alt="Video call with AWS BuildHERs+ AmbassadHERS+ members" class="gallery-image photo-full" loading="lazy" decoding="async">
                         <div class="gallery-overlay">
                             <p>AWS BuildHERs+: AmbassadHERS+ Call</p>
                         </div>
@@ -751,8 +951,9 @@
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="section bg-alt">
+    <section id="contact" class="section bg-alt" data-fx-mood="ember">
         <div class="container">
+            <p class="section-eyebrow" aria-hidden="true"><span class="section-eyebrow-num">10</span>Say hello</p>
             <h2 class="section-title">Let's work together</h2>
             <div class="bento-grid contact-grid">
                 <div class="bento-card large">
@@ -767,23 +968,23 @@
                 <div class="bento-card social-card">
                     <h3>Social Links</h3>
                     <div class="social-links">
-                        <a href="https://github.com/mochatakahashi" target="_blank" class="social-link">
+                        <a href="https://github.com/mochatakahashi" target="_blank" rel="noopener" class="social-link">
                             <i class="fab fa-github"></i>
                             <span>GitHub</span>
                         </a>
-                        <a href="https://www.linkedin.com/in/rodmina-ibe" target="_blank" class="social-link">
+                        <a href="https://www.linkedin.com/in/rodmina-ibe" target="_blank" rel="noopener" class="social-link">
                             <i class="fab fa-linkedin"></i>
                             <span>LinkedIn</span>
                         </a>
-                        <a href="https://www.facebook.com/rodminajhoy.ibe.735" target="_blank" class="social-link">
+                        <a href="https://www.facebook.com/rodminajhoy.ibe.735" target="_blank" rel="noopener" class="social-link">
                             <i class="fab fa-facebook"></i>
                             <span>Facebook</span>
                         </a>
-                        <a href="https://www.instagram.com/rdmnjh.b_/" target="_blank" class="social-link">
+                        <a href="https://www.instagram.com/rdmnjh.b_/" target="_blank" rel="noopener" class="social-link">
                             <i class="fab fa-instagram"></i>
                             <span>Instagram</span>
                         </a>
-                        <a href="https://www.tiktok.com/@rodminajhoyibe" target="_blank" class="social-link">
+                        <a href="https://www.tiktok.com/@rodminajhoyibe" target="_blank" rel="noopener" class="social-link">
                             <i class="fab fa-tiktok"></i>
                             <span>TikTok</span>
                         </a>
@@ -792,6 +993,8 @@
             </div>
         </div>
     </section>
+
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
@@ -803,18 +1006,18 @@
 
     <!-- AI Chat Assistant -->
     <div id="ai-chat-widget">
-        <button id="ai-chat-toggle" class="ai-chat-btn" aria-label="Open AI Chat">
+        <button type="button" id="ai-chat-toggle" class="ai-chat-btn" aria-label="Open AI Chat" aria-expanded="false" aria-controls="ai-chat-panel">
             <i class="fas fa-robot"></i>
         </button>
-        <div id="ai-chat-panel" class="ai-chat-panel hidden">
+        <div id="ai-chat-panel" class="ai-chat-panel hidden" role="dialog" aria-label="AI Chat Assistant">
             <div class="ai-chat-header">
                 <h3>Ask me anything!</h3>
-                <button id="ai-chat-close" class="ai-close-btn" aria-label="Close chat">
+                <button type="button" id="ai-chat-close" class="ai-close-btn" aria-label="Close chat">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <iframe 
-                src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/21/07/20251221071445-63MDJOTS.json"
+            <iframe
+                data-src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/21/07/20251221071445-63MDJOTS.json"
                 style="width: 100%; height: 100%; border: none;"
                 title="AI Chat Assistant"
             ></iframe>
@@ -832,13 +1035,17 @@
         </button>
         <figure class="photo-viewer-stage">
             <img id="photo-viewer-img" alt="">
-            <figcaption id="photo-viewer-caption"></figcaption>
+            <figcaption id="photo-viewer-caption" aria-live="polite" aria-atomic="true"></figcaption>
         </figure>
         <button type="button" class="photo-viewer-nav next" id="photo-viewer-next" aria-label="Next photo">
             <i class="fas fa-chevron-right"></i>
         </button>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
+    <script src="js/scroll-fx.js" defer></script>
+    <script src="js/cursor.js" defer></script>
+    <script type="module" src="js/hero3d.js"></script>
+    <script type="module" src="js/mascot.js"></script>
 </body>
 </html>

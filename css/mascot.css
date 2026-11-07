@@ -1,0 +1,346 @@
+/* =============================================================================
+   css/mascot.css — the cloud buddy                             owner: MASCOT
+   Styles the #mascot subtree and the private .mascot-trail puff layer only.
+   Gating: continuous/entrance animation only under html.fx-motion; state
+   transitions are ungated (the html.fx-reduced kill-switch shortens them).
+   Private vars: --m-x, --m-y, --m-scale, --m-size (contract), --m-tail,
+   --m-px, --m-py, --m-ps. Keyframe prefix: mascot-.
+   ============================================================================= */
+
+/* ---------- Container: positioned only by transform (written by mascot.js) ---------- */
+#mascot {
+  --m-size: 195px;
+  --m-x: -400px;
+  --m-y: -400px;
+  --m-scale: 1;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-mascot, 900);
+  width: var(--m-size);
+  height: var(--m-size);
+  transform-origin: 0 0;
+  transform: translate3d(var(--m-x), var(--m-y), 0) scale(var(--m-scale));
+  will-change: transform;
+  pointer-events: none;
+  opacity: 0;                                  /* until html.mascot-ready (first real frame) */
+  -webkit-user-select: none;
+  user-select: none;
+}
+html.mascot-ready #mascot {
+  opacity: 1;
+  transition: opacity var(--dur-base, 320ms) var(--ease-out, cubic-bezier(.22, 1, .36, 1));
+}
+html.mascot-ready #mascot[data-state="away"] {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms var(--ease-out, ease-out), visibility 0s linear 180ms;
+}
+html.mascot-ready #mascot.is-leaving {
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out, ease-out);
+}
+
+.mascot-body,
+.mascot-canvas,
+.mascot-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mascot-svg { overflow: visible; }
+
+/* ---------- Hit area: the real <button>, a circle covering 70% of the box ---------- */
+.mascot-hit {
+  position: absolute;
+  left: 15%;
+  top: 15%;
+  z-index: 1;
+  width: 70%;
+  height: 70%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mascot-hit:focus:not(:focus-visible) { outline: none; }
+.mascot-hit:focus-visible {                    /* counter-scaled so the ring stays 3px at any size */
+  outline: calc(3px / var(--m-scale, 1)) solid var(--focus, #f0abfc);
+  outline-offset: calc(4px / var(--m-scale, 1));
+  border-radius: 50%;
+}
+#mascot[data-state="flying"] .mascot-hit,
+#mascot[data-state="away"] .mascot-hit { pointer-events: none; }
+
+/* ---------- Dismiss (x): shown on hover / focus-within, never scaled ---------- */
+.mascot-dismiss {
+  position: absolute;
+  top: 10%;
+  right: 10%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  margin: 0;
+  padding: 0 0 1px;
+  border: 1px solid var(--glass-border, rgba(196, 181, 253, .16));
+  border-radius: 50%;
+  background: var(--glass-bg-strong, rgba(18, 12, 46, .86));
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(3, 1, 12, .4));
+  color: var(--text-1, #f4f1ff);
+  font: 600 16px/1 var(--font-sans, system-ui, sans-serif);
+  cursor: pointer;
+  transform-origin: 100% 0;
+  transform: scale(calc(1 / var(--m-scale, 1)));
+  opacity: 0;                                  /* not visibility: it stays in the tab order (Shift+Tab from the robot) */
+  pointer-events: none;
+  transition: opacity 160ms var(--ease-out, ease-out) 420ms, pointer-events 0s linear 580ms,
+              border-color var(--dur-fast, 200ms), background-color var(--dur-fast, 200ms);
+  transition-behavior: allow-discrete;         /* pointer-events holds through the hover grace */
+}
+#mascot:hover .mascot-dismiss,
+#mascot:focus-within .mascot-dismiss,
+.mascot-dismiss:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+.mascot-dismiss:hover { border-color: var(--glass-border-hover, rgba(240, 171, 252, .45)); }
+.mascot-dismiss:focus:not(:focus-visible) { outline: none; }
+.mascot-dismiss:focus-visible {
+  outline: 3px solid var(--focus, #f0abfc);
+  outline-offset: 2px;
+}
+#mascot[data-state="flying"] .mascot-dismiss {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition-delay: 0s, 0s, 0s, 0s;
+}
+
+/* ---------- Speech bubble: glass pill, counter-scaled, anchored at its tail tip ---------- */
+.mascot-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 240px;
+  padding: .6rem .85rem;
+  border: 1px solid var(--glass-border, rgba(196, 181, 253, .16));
+  border-radius: 16px;
+  background: var(--glass-bg-strong, rgba(18, 12, 46, .86));
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md, 0 12px 32px -12px rgba(3, 1, 12, .7)), var(--glass-highlight, inset 0 1px 0 rgba(255, 255, 255, .08));
+  color: var(--text-1, #f4f1ff);
+  font: 500 .875rem/1.45 var(--font-sans, 'Inter', system-ui, sans-serif);
+  text-align: left;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  pointer-events: none;
+  transform: scale(calc(1 / var(--m-scale, 1)));   /* text is never scaled */
+  scale: .85;                                       /* pop, composes with the counter-scale */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms var(--ease-out, ease-out), scale 180ms var(--ease-out, ease-out), visibility 0s linear 180ms;
+}
+.mascot-bubble.is-visible {
+  opacity: 1;
+  visibility: visible;
+  scale: 1;
+  transition: opacity 260ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1)),
+              scale 260ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1)), visibility 0s;
+}
+html:not(.fx-motion) .mascot-bubble { scale: none; }   /* reduced / static: opacity fade only */
+
+.mascot-bubble::after {                                 /* tail, pointing at the buddy */
+  content: '';
+  position: absolute;
+  background: var(--glass-bg-strong, rgba(18, 12, 46, .86));
+}
+.mascot-bubble[data-place="top"]::after,
+.mascot-bubble[data-place="bottom"]::after {
+  left: var(--m-tail, 50%);
+  width: 14px;
+  height: 8px;
+  margin-left: -7px;
+}
+.mascot-bubble[data-place="top"]::after { top: 100%; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.mascot-bubble[data-place="bottom"]::after { bottom: 100%; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.mascot-bubble[data-place="left"]::after,
+.mascot-bubble[data-place="right"]::after {
+  top: var(--m-tail, 50%);
+  width: 8px;
+  height: 14px;
+  margin-top: -7px;
+}
+.mascot-bubble[data-place="left"]::after { left: 100%; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.mascot-bubble[data-place="right"]::after { right: 100%; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+
+.mascot-bubble-text { display: block; }
+.mascot-bubble-ghost { visibility: hidden; }            /* untyped rest: keeps the size fixed while typing */
+
+@media (max-width: 768px) {
+  .mascot-bubble { max-width: min(220px, 62vw); }
+}
+
+/* ---------- Flight trail (private fixed layer, sits just under #mascot) ---------- */
+.mascot-trail {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-mascot, 900);
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);   /* read once by mascot.js for the dock offset */
+  pointer-events: none;
+}
+.mascot-puff {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--m-ps, 48px);
+  height: var(--m-ps, 48px);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .9), rgba(233, 213, 255, .5) 55%, rgba(233, 213, 255, 0));
+  opacity: 0;
+  transform: translate3d(var(--m-px, 0), var(--m-py, 0), 0);
+}
+[data-theme="light"] .mascot-puff {
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(221, 214, 254, .6) 55%, rgba(221, 214, 254, 0));
+}
+html.fx-motion .mascot-puff { animation: mascot-puff 700ms var(--ease-out, ease-out) forwards; }
+@keyframes mascot-puff {
+  from { opacity: .5; transform: translate3d(var(--m-px, 0), var(--m-py, 0), 0) scale(.4); }
+  to   { opacity: 0;  transform: translate3d(var(--m-px, 0), var(--m-py, 0), 0) scale(1.4); }
+}
+
+/* ---------- ?fx=debug: anchor and band outlines ---------- */
+.mascot-debug {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+}
+html.fx-debug .mascot-debug {
+  display: block;
+  outline: 1px dashed var(--accent-3, #67e8f9);
+}
+
+/* =============================================================================
+   SVG fallback renderer
+   ============================================================================= */
+.mascot-svg .m-stop-lit   { stop-color: var(--mascot-lit, #ffffff); }
+.mascot-svg .m-stop-mid   { stop-color: var(--mascot-mid, #e6dcff); }
+.mascot-svg .m-stop-shade { stop-color: var(--mascot-shadow, #a99beb); }
+.mascot-svg .m-stop-blush { stop-color: var(--mascot-blush, #ff8fb8); }
+
+.mascot-svg .m-fill ellipse,
+.mascot-svg .m-arm-fill { fill: url(#mascot-g-body); }
+.mascot-svg .m-tint ellipse { fill: url(#mascot-g-tint); }
+.mascot-svg .m-rim,
+.mascot-svg .m-arm-rim { fill: var(--mascot-rim, #ff7ac8); opacity: .6; }
+.mascot-svg .m-gloss { fill: #ffffff; opacity: .5; }
+.mascot-svg .m-shadow { fill: var(--mascot-ink, #1e1b4b); opacity: .16; }
+.mascot-svg .m-eye-ball { fill: var(--mascot-ink, #1e1b4b); }
+.mascot-svg .m-eye-hl { fill: #ffffff; }
+.mascot-svg .m-blush { fill: url(#mascot-g-blush); opacity: .55; }
+.mascot-svg .m-happy,
+.mascot-svg .m-mouth-smile,
+.mascot-svg .m-mouth-o {
+  fill: none;
+  stroke: var(--mascot-ink, #1e1b4b);
+  stroke-linecap: round;
+}
+.mascot-svg .m-happy { stroke-width: 1.9; opacity: 0; }
+.mascot-svg .m-mouth-smile { stroke-width: 1.5; }
+.mascot-svg .m-mouth-o { stroke-width: 1.3; display: none; }
+.mascot-svg .m-mouth-grin {
+  fill: var(--mascot-ink, #1e1b4b);
+  stroke: var(--mascot-ink, #1e1b4b);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  display: none;
+}
+.mascot-svg .m-node-core { fill: var(--mascot-node, #f0abfc); }
+.mascot-svg .m-node-halo { fill: var(--mascot-node, #f0abfc); opacity: .22; }
+.mascot-svg .m-node-facet { fill: #ffffff; opacity: .4; }
+
+/* Transform boxes (SVG user units = CSS px) */
+.mascot-svg .m-shadow,
+.mascot-svg .m-eye,
+.mascot-svg .m-eye-blink,
+.mascot-svg .m-node-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mascot-svg .m-mouth-smile { transform-box: fill-box; transform-origin: 50% 0; }
+.mascot-svg .m-arm-l { transform-box: view-box; transform-origin: 26.6px 52.6px; }
+.mascot-svg .m-arm-r { transform-box: view-box; transform-origin: 93.4px 52.6px; }
+
+/* Static node position (front-right); orbit only with motion */
+.mascot-svg .m-orb-x { transform: translateX(30px); }
+.mascot-svg .m-orb-y { transform: translateY(9px); }
+.mascot-svg .m-node-back { opacity: 0; }
+
+html.fx-motion .mascot-svg .m-bob { animation: mascot-bob 3.2s ease-in-out infinite alternate; }
+html.fx-motion .mascot-svg .m-shadow { animation: mascot-shadow 3.2s ease-in-out infinite alternate; }
+html.fx-motion .mascot-svg .m-eye-blink { animation: mascot-blink 4.5s ease-in-out infinite; }
+html.fx-motion .mascot-svg .m-orb-x { animation: mascot-orb-x 3s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+html.fx-motion .mascot-svg .m-orb-y { animation: mascot-orb-y 3s cubic-bezier(.37, 0, .63, 1) -1.5s infinite alternate; }
+html.fx-motion .mascot-svg .m-node-front { animation: mascot-orb-front 6s linear infinite; }
+html.fx-motion .mascot-svg .m-node-back { animation: mascot-orb-back 6s linear infinite; }
+
+/* Expressions (data-state is written by mascot.js) */
+#mascot[data-state="hover"] .m-eye-ball,
+#mascot[data-state="hover"] .m-eye-hl,
+#mascot.is-squint .m-eye-ball,
+#mascot.is-squint .m-eye-hl { opacity: 0; }
+#mascot[data-state="hover"] .m-happy,
+#mascot.is-squint .m-happy { opacity: 1; }
+#mascot[data-state="hover"] .m-blush,
+#mascot.is-squint .m-blush { opacity: .88; }
+#mascot[data-state="hover"] .m-mouth-smile,
+#mascot[data-state="whee"] .m-mouth-smile { display: none; }
+#mascot[data-state="hover"] .m-mouth-grin,
+#mascot[data-state="whee"] .m-mouth-o { display: inline; }
+#mascot[data-state="sleep"] .m-eye { transform: scaleY(.42); }
+#mascot[data-state="sleep"] .m-eye-hl { opacity: 0; }
+#mascot[data-mode="chat"] .m-node-core,
+#mascot[data-mode="chat"] .m-node-halo { fill: var(--mascot-node-chat, #67e8f9); }
+#mascot.is-flash .m-node-core,
+#mascot.is-flash .m-node-halo { fill: #ffffff; }
+
+html.fx-motion #mascot[data-state="talk"] .m-mouth-smile { animation: mascot-talk 83ms ease-in-out 7 alternate; }
+html.fx-motion #mascot[data-state="talk"] .m-node-halo { animation: mascot-pulse 420ms ease-in-out infinite alternate; }
+html.fx-motion #mascot[data-state="wave"][data-side="left"] .m-arm-r { animation: mascot-wave-r 300ms ease-in-out 2; }
+html.fx-motion #mascot[data-state="wave"][data-side="right"] .m-arm-l { animation: mascot-wave-l 300ms ease-in-out 2; }
+
+@keyframes mascot-bob { from { transform: translateY(1.4px); } to { transform: translateY(-2.6px); } }
+@keyframes mascot-shadow { from { transform: scaleX(1); opacity: .18; } to { transform: scaleX(.84); opacity: .1; } }
+@keyframes mascot-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.08); } }
+@keyframes mascot-orb-x { from { transform: translateX(-42px); } to { transform: translateX(42px); } }
+@keyframes mascot-orb-y { from { transform: translateY(-14px); } to { transform: translateY(14px); } }
+@keyframes mascot-orb-front { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes mascot-orb-back { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes mascot-talk { to { transform: scaleY(1.8); } }
+@keyframes mascot-pulse { from { opacity: .22; transform: scale(1); } to { opacity: .5; transform: scale(1.25); } }
+@keyframes mascot-wave-r { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-62deg); } }
+@keyframes mascot-wave-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(62deg); } }
+
+/* ---------- Print ---------- */
+@media print {
+  #mascot, .mascot-trail { display: none !important; }
+}

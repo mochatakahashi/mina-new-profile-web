@@ -1,0 +1,230 @@
+/* =========================================================================
+   scroll-fx.css — MOTION (§8): reveals, cascades, developing photos,
+   section seams, nav indicator, scroll progress, card glare + foil,
+   modal item stagger, view-transition reset, print override.
+   Gating: entrance/continuous animation only under html.fx-reveal / html.fx-motion.
+   Keyframe prefix: sfx-
+   ========================================================================= */
+
+/* ---------- 1. Reveal (only while JS allows it via html.fx-reveal) ---------- */
+html.fx-reveal :is(.section-eyebrow, .section-title, .gallery-tabs, .gallery-intro, .bento-grid > .bento-card):not(.rv-in) {
+    opacity: 0;
+}
+html.fx-reveal .rv-in:not(.rv-now) {
+    animation: sfx-reveal var(--dur-reveal, 800ms) var(--ease-out, cubic-bezier(.22, 1, .36, 1)) var(--rv-delay, 0ms) backwards;
+}
+html.fx-reveal .section-title.rv-in:not(.rv-now) {
+    animation-name: sfx-title;
+}
+html.fx-reveal .section-title.rv-in:not(.rv-now)::after {
+    animation: sfx-line var(--dur-slow, 560ms) var(--ease-out, cubic-bezier(.22, 1, .36, 1)) calc(var(--rv-delay, 0ms) + 250ms) backwards;
+}
+
+@keyframes sfx-reveal {
+    from { opacity: 0; translate: 0 28px; }
+}
+/* The end inset is negative so the title's glow is never clipped mid-animation;
+   inset() cannot interpolate with `none`, so both ends are explicit. */
+@keyframes sfx-title {
+    from { opacity: 0; translate: 0 16px; clip-path: inset(0 0 100% 0); }
+    to   { clip-path: inset(-1em -1em -1em -1em); }
+}
+/* `scale` (not transform) so the underline's own centring transform is untouched */
+@keyframes sfx-line {
+    from { scale: 0 1; }
+}
+
+/* ---------- 2. Children cascade inside a revealing card ---------- */
+html.fx-reveal .rv-in:not(.rv-now) .tech-tag {
+    animation: sfx-pop 420ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1))
+        calc(var(--rv-delay, 0ms) + 200ms + var(--i, 0) * 45ms) backwards;
+}
+html.fx-reveal .rv-in:not(.rv-now) :is(.hobby-item, .social-link) {
+    animation: sfx-slide 420ms var(--ease-out, cubic-bezier(.22, 1, .36, 1))
+        calc(var(--rv-delay, 0ms) + 200ms + var(--i, 0) * 50ms) backwards;
+}
+
+@keyframes sfx-pop {
+    from { opacity: 0; scale: .8; }
+}
+@keyframes sfx-slide {
+    from { opacity: 0; translate: -12px 0; }
+}
+
+/* Stagger index for cascades (sibling position, capped at 10) */
+:is(.tech-tag, .hobby-item, .social-link):nth-child(2)  { --i: 1; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(3)  { --i: 2; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(4)  { --i: 3; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(5)  { --i: 4; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(6)  { --i: 5; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(7)  { --i: 6; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(8)  { --i: 7; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(9)  { --i: 8; }
+:is(.tech-tag, .hobby-item, .social-link):nth-child(n+10) { --i: 9; }
+
+/* ---------- 3. Developing gallery photos ---------- */
+html.fx-reveal .gallery-card.rv-in:not(.rv-now) .gallery-image {
+    animation: sfx-develop 900ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) var(--rv-delay, 0ms) backwards;
+}
+
+@keyframes sfx-develop {
+    from { filter: saturate(0) brightness(.8); transform: scale(1.08); }
+}
+
+/* ---------- 4. Section horizon seams ---------- */
+.section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    width: min(720px, 80%);
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--glow-violet, rgba(167, 139, 250, .55)), var(--glow-pink, rgba(244, 114, 182, .5)), transparent);
+    transform: scaleX(1);
+}
+html.fx-motion .section::before {
+    transform: scaleX(0);
+}
+html.fx-motion .section.is-inview::before {
+    transform: scaleX(1);
+    transition: transform 1.2s var(--ease-out, cubic-bezier(.22, 1, .36, 1));
+}
+
+/* ---------- 5. Gliding nav indicator ---------- */
+.nav-indicator {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--ni-w, 0);
+    transform: translateX(var(--ni-x, 0));
+    border-radius: var(--radius-pill, 999px);
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(124, 58, 237, .35), rgba(219, 39, 119, .25));
+    box-shadow: 0 0 18px -4px var(--glow-pink, rgba(244, 114, 182, .5)), inset 0 0 0 1px rgba(240, 171, 252, .35);
+    transition: transform 420ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)),
+                width 420ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)),
+                opacity var(--dur-fast, 200ms);
+}
+.nav-indicator.is-on { opacity: 1; }
+.nav-indicator.is-instant { transition: opacity var(--dur-fast, 200ms); }   /* first placement: no slide from 0 */
+
+[data-theme="light"] .nav-indicator {
+    background: rgba(124, 58, 237, .12);
+    box-shadow: inset 0 0 0 1px rgba(109, 40, 217, .25);
+}
+
+@media (width < 1100px) {
+    .nav-indicator { display: none; }
+    .nav-menu.has-indicator .nav-link.active { background: rgba(167, 139, 250, .14); }
+}
+
+/* ---------- 6. Scroll progress (CSS scroll timeline; JS writes --scroll-p otherwise) ---------- */
+.fx-progress {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--grad-brand, linear-gradient(135deg, #7c3aed 0%, #c026d3 55%, #db2777 100%));
+    transform-origin: 0 50%;
+    transform: scaleX(var(--scroll-p, 0));
+    opacity: .9;
+    pointer-events: none;
+}
+
+@supports (animation-timeline: scroll()) {
+    .fx-progress {
+        animation: sfx-progress linear both;
+        animation-timeline: scroll(root block);
+    }
+}
+
+@keyframes sfx-progress {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+
+/* ---------- 7. Card glare (pointer light, vars from scroll-fx.js) ---------- */
+.bento-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;   /* above the card background (isolated), below its text */
+    background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 0%), var(--glare-color, rgba(255, 255, 255, .10)), transparent 45%);
+    opacity: var(--glare, 0);
+    transition: opacity var(--dur-base, 320ms);
+}
+[data-theme="light"] .bento-card::after { mix-blend-mode: soft-light; }
+.gallery-card::after { z-index: 2; }   /* photo tiles have no body text: keep the glare over the image */
+.gallery-card:hover::after { opacity: .6; }
+
+/* One-time foil sweep on the TESDA card's first reveal, then back to the glare rule */
+html.fx-reveal .certificates-grid .large-horizontal.rv-in:not(.rv-now)::after {
+    animation: sfx-foil 1200ms var(--ease-in-out, cubic-bezier(.65, 0, .35, 1)) calc(var(--rv-delay, 0ms) + 300ms) backwards;
+}
+
+/* Foil look lives in the keyframes so the glare rule applies again afterwards */
+@keyframes sfx-foil {
+    from {
+        opacity: 1;
+        background-image: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .18) 50%, transparent 65%);
+        background-repeat: no-repeat;
+        background-size: 250% 100%;
+        background-position: 150% 0;
+    }
+    to {
+        opacity: 1;
+        background-image: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .18) 50%, transparent 65%);
+        background-repeat: no-repeat;
+        background-size: 250% 100%;
+        background-position: -50% 0;
+    }
+}
+
+/* ---------- 8. Modal item stagger ---------- */
+html.fx-motion .modal.active .experience-item {
+    animation: sfx-rise 520ms var(--ease-out, cubic-bezier(.22, 1, .36, 1)) backwards;
+    animation-delay: calc(120ms + var(--i, 0) * 60ms);
+}
+
+@keyframes sfx-rise {
+    from { opacity: 0; translate: 0 16px; }
+}
+
+/* Items share .modal-body with h3/p siblings, so count by type (divs) */
+.experience-item:nth-of-type(2)  { --i: 1; }
+.experience-item:nth-of-type(3)  { --i: 2; }
+.experience-item:nth-of-type(4)  { --i: 3; }
+.experience-item:nth-of-type(5)  { --i: 4; }
+.experience-item:nth-of-type(6)  { --i: 5; }
+.experience-item:nth-of-type(7)  { --i: 6; }
+.experience-item:nth-of-type(8)  { --i: 7; }
+.experience-item:nth-of-type(9)  { --i: 8; }
+.experience-item:nth-of-type(10) { --i: 9; }
+.experience-item:nth-of-type(11) { --i: 10; }
+.experience-item:nth-of-type(n+12) { --i: 11; }
+
+/* ---------- 9. Theme switch: the WAAPI clip-path wipe replaces the default crossfade ---------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* ---------- 10. Print: everything visible, nothing mid-animation ---------- */
+@media print {
+    html.fx-reveal * {
+        opacity: 1 !important;
+        animation: none !important;
+        translate: none !important;
+    }
+}
